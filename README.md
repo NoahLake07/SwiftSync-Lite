@@ -47,20 +47,24 @@ View the application's user manual source HTML content [here](https://github.com
 
 ## Screenshots
 
-![Console](path/to/console-screenshot.png)
-*SwiftSync LITE Console*
+![Screenshot 2023-11-01 154247](https://github.com/NoahLake07/SwiftSyncLITE/assets/98616672/148a8ea0-99bf-4940-8eb9-799a99603b4e)
 
-![Profiles](path/to/profiles-screenshot.png)
-*Profiles Management*
+*Console Page*
 
-![Settings](path/to/settings-screenshot.png)
-*Settings Configuration*
+![Screenshot 2023-11-01 154113](https://github.com/NoahLake07/SwiftSyncLITE/assets/98616672/548c5559-13f7-484a-842d-4a300da98dd1)
+
+*Profiles Page*
+
+![Screenshot 2023-11-01 154048](https://github.com/NoahLake07/SwiftSyncLITE/assets/98616672/90dad95d-4c57-4e23-9ee6-5b923fec1c60)
+
+*Dialog for creating a new profile*
 
 ## Contributing
 
 Contributions are welcome! Fork the repository, make your changes, and submit a pull request. Be sure to adhere to the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 ## License
+
 
 SwiftSync LITE is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
