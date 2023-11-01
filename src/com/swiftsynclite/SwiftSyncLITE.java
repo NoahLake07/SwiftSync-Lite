@@ -6,7 +6,9 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,12 +38,12 @@ public class SwiftSyncLITE {
     private OperatingSystem os;
 
     public SwiftSyncLITE() {
-        String fetchedOS = System.getProperty("os.name");
-        if(fetchedOS.contains("Mac")){
+        String fetchedOS = System.getProperty("os.name").toLowerCase();
+        if(fetchedOS.contains("mac")){
             this.os = OperatingSystem.MACOS;
-        } else if(fetchedOS.contains("Windows")){
+        } else if(fetchedOS.contains("win")){
             this.os = OperatingSystem.WINDOWS;
-        } else if(fetchedOS.contains("Linux")){
+        } else if(fetchedOS.contains("linux")){
             this.os = OperatingSystem.LINUX;
         } else {
             this.os = OperatingSystem.UNSUPPORTED;
@@ -319,8 +321,88 @@ public class SwiftSyncLITE {
             }
         }
 
-        void openHelpMenu(){
-            // open a help menu
+        void openHelpMenu() {
+            String filePath = "docs/help.html";
+            File file = new File(filePath);
+
+            String helpContent = getHelpManualContent();
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                writer.write(helpContent);
+                filePath = file.getPath();
+            } catch (IOException e) {
+                console.append("Error creating help file: " + e.getMessage(), ERROR_TEXT_COLOR);
+                return;
+            }
+
+            // Open the generated HTML file in the default web browser
+            try {
+                if (os == OperatingSystem.WINDOWS) {
+                    // For Windows (handle spaces in file path)
+                    Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler \"" + filePath + "\"");
+                } else if (os == OperatingSystem.MACOS) {
+                    // For macOS
+                    Runtime.getRuntime().exec("open \"" + filePath + "\"");
+                } else {
+                    // For Linux (handle spaces in file path)
+                    Runtime.getRuntime().exec("xdg-open \"" + filePath + "\"");
+                }
+            } catch (IOException e) {
+                console.append("Error opening help file: " + e.getMessage(), ERROR_TEXT_COLOR);
+            }
+        }
+
+        private String getHelpManualContent(){
+            String helpContent = "<html><head><style>"
+                    + "body { background-color: #2B2B2B; color: #A9B7C6; font-family: Arial, sans-serif; padding-left: 20px; }"
+                    + "h1 { color: #61AFEF; }"
+                    + "h2 { color: #61AFEF; }"
+                    + "h3 { color: #61AFEF; }"
+                    + "table { width: 80%; margin-top: 20px; border-collapse: collapse; }"
+                    + "th, td { border: 1px solid #3E3E3E; padding: 10px; text-align: left; }"
+                    + "th { background-color: #3E3E3E; color: #61AFEF; }"
+                    + "a { color: #61AFEF; text-decoration: none; }"
+                    + "</style></head><body>"
+                    + "<h1>SwiftSyncLITE - User Manual</h1>"
+
+                    + "<h2><br>App Overview</h2>"
+                    + "<p>SwiftSyncLITE is a lightweight synchronization tool designed to keep your files up-to-date between two directories. "
+                    + "It provides <br>quick and efficient synchronization features for managing your data. </p><p>When you run the synchronize command, "
+                    + "your master <br>and local directory will begin syncing. Any differences that the app notices between your local and master file "
+                    + "directories, <br>SwiftSyncLITE will then resolve all the differences.</p>"
+
+                    + "<h2>Profiles</h2>"
+                    + "<p>Profiles store your data for that instance of the directories you're syncing, the mode you're syncing with, and other settings.<br>"
+                    + "This way, when you want to switch between your sync instances, you can simply go to the Profiles tab and load one from a file.<p>"
+                    + "<p>To create a new profile, follow these steps:</p>"
+                    + "<ol>"
+                    + "<li>Go to Profiles > Manage Profiles.</li>"
+                    + "<li>Click on 'Create New.'</li>"
+                    + "<li>Follow the on-screen instructions to set up your master and local directories.</li>"
+                    + "<li>Save the profile to a file location of choice for future use. If you do not save your profile after creating it, the data will be lost upon closing the app.</li>"
+                    + "</ol>"
+
+                    + "<h2>Commands</h2>"
+                    + "<table>"
+                    + "<tr><th>Command</th><th>Description</th></tr>"
+                    + "<tr><td>sync (or synchronize)</td><td>Start synchronization. Make sure to load a profile first.</td></tr>"
+                    + "<tr><td>master root</td><td>Open the master directory in the file browser.</td></tr>"
+                    + "<tr><td>local root</td><td>Open the local directory in the file browser.</td></tr>"
+                    + "<tr><td>master size</td><td>Show the size of the master directory.</td></tr>"
+                    + "<tr><td>local size</td><td>Show the size of the local directory.</td></tr>"
+                    + "<tr><td>status hide (or hide status)</td><td>Hide the status/process bar.</td></tr>"
+                    + "<tr><td>status show (or show status)</td><td>Show the status/process bar.</td></tr>"
+                    + "<tr><td>help</td><td>Show this help menu.</td></tr>"
+                    + "<tr><td>profile page</td><td>Switch to the profile management page.</td></tr>"
+                    + "</table>"
+
+                    + "<h3>GitHub Repository</h3>"
+                    + "<p>For more information and to contribute to the project, visit the "
+                    + "<a href='https://github.com/NoahLake07/SwiftSyncLITE'>GitHub repository</a>.</p>"
+                    + "<p>SwiftSyncLITE is licensed under the Apache License 2.0.</p>"
+                    + "</body></html>";
+
+            return helpContent;
         }
 
         private void synchronize(){
