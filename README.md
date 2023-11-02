@@ -4,7 +4,7 @@ SwiftSync LITE is a lightweight synchronization tool designed to keep your files
 
 ## Features
 
-- **User-Friendly Interface:** SwiftSync LITE offers an intuitive user interface with a sidebar menu, making it easy to navigate different sections of the application.
+- **User-Friendly Interface:** SwiftSync LITE offers an intuitive user interface that utilizes the FlatLAF plugin for java.
 - **Console:** View real-time updates and status messages in the integrated console. It provides detailed information about synchronization progress.
 - **Profile Management:** Create and manage synchronization profiles. Store data for different instances of directories you want to sync, along with the synchronization mode and other settings.
 - **Quick Synchronization:** SwiftSync LITE allows you to synchronize your master and local directories effortlessly. Resolve differences between directories with a single click.
@@ -14,10 +14,13 @@ SwiftSync LITE is a lightweight synchronization tool designed to keep your files
 
 ## Installation
 
-To run SwiftSync LITE, ensure you have Java installed on your system. Download the latest release from the [GitHub repository](https://github.com/NoahLake07/SwiftSyncLITE) and execute the JAR file.
+To run SwiftSync LITE, ensure you have Java installed on your system. You can download a JRE [here](java.com/downloads).
 
+To just download the latest release as a jar file, download it from the [GitHub repository](https://github.com/NoahLake07/SwiftSyncLITE) and execute the JAR file.
 
-To install SwiftSync LITE with all its core features and functionality, use the installer for Windows that can be found [here](https://github.com/NoahLake07/SwiftSyncLITE/blob/main/versions/v0.5.1/SSL%20Installer%20for%20Windows%20v0.5.1.jar).
+To install SwiftSync LITE with all its core features and functionality, use the dedicated application installer.
+- **Windows:**   [SwiftSync LITE Installer for Windows](https://github.com/NoahLake07/SwiftSyncLITE/blob/main/versions/v0.5.1/SSL%20Installer%20for%20Windows%20v0.5.1.jar).
+- **Mac:**       *not yet available*
 
 ## Usage
 
