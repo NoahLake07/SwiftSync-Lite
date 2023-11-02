@@ -16,6 +16,9 @@ SwiftSync LITE is a lightweight synchronization tool designed to keep your files
 
 To run SwiftSync LITE, ensure you have Java installed on your system. Download the latest release from the [GitHub repository](https://github.com/NoahLake07/SwiftSyncLITE) and execute the JAR file.
 
+
+To install SwiftSync LITE with all its core features and functionality, use the installer for Windows that can be found [here](https://github.com/NoahLake07/SwiftSyncLITE/blob/main/versions/v0.5.1/SSL%20Installer%20for%20Windows%20v0.5.1.jar).
+
 ## Usage
 
 1. **Profile Creation:**
