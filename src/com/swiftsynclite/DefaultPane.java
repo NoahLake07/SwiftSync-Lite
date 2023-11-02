@@ -24,5 +24,6 @@ public class DefaultPane extends JPanel {
         headerPanel.add(header);
         add(headerPanel);
         add(separator);
+        this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
     }
 }

@@ -6,16 +6,15 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static java.awt.Font.BOLD;
 
 public class SwiftSyncLITE {
+
+    public static final String VERSION = "0.5 beta";
 
     public static final Font SELECTED_FONT = new Font("Arial", BOLD,15);
     public static final Font DEFAULT_BTN_FONT = new Font("Arial",Font.PLAIN,15);
@@ -32,10 +31,26 @@ public class SwiftSyncLITE {
     private Panes myPanes = null;
     private JButton consoleButton, profilesButton, settingsButton;
     private JSplitPane splitPane;
+    private JFrame mainframe;
 
     private Controller SSFE_controller = null;
 
     private OperatingSystem os;
+
+    public SwiftSyncLITE(String profileInstance){
+        this();
+        File file =new File(profileInstance);
+        ObjectInputStream ois = null;
+        try {
+            ois = new ObjectInputStream(new FileInputStream(file));
+            Profile obj = (Profile) ois.readObject();
+            SSFE_controller.setProfile(obj);
+            replaceContentPane(splitPane, myPanes.consolePane);
+            SSFE_controller.console.append("Profile \"" + SSFE_controller.getCurrentProfile().getProfileName() + "\" was opened successfully.", new Color(25, 115, 11));
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public SwiftSyncLITE() {
         String fetchedOS = System.getProperty("os.name").toLowerCase();
@@ -61,7 +76,7 @@ public class SwiftSyncLITE {
     }
 
     private void launch() {
-        JFrame mainframe = new JFrame("SwiftSync LITE");
+        mainframe = new JFrame("SwiftSync LITE");
         mainframe.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         mainframe.setSize(800, 600);
         mainframe.setMinimumSize(new Dimension(660,500));
@@ -94,47 +109,106 @@ public class SwiftSyncLITE {
         logo.setLayout(new FlowLayout(FlowLayout.LEFT));
 
         try {
-            ImageIcon logoIcon = new ImageIcon(ImageIO.read(new File("res/SSL_logo.png")));
-            Image logoImage = logoIcon.getImage();
-            int logoW = logoIcon.getIconWidth(), logoH = logoIcon.getIconHeight();
-            double logoScaleFactor = 4.5;
-            Image resizedLogoImg = logoImage.getScaledInstance((int) ((int) logoW/logoScaleFactor), (int) ((int) logoH/logoScaleFactor),  java.awt.Image.SCALE_SMOOTH);
-            logoIcon = new ImageIcon(resizedLogoImg);
-            logo.setIcon(logoIcon);
-            logo.setIconTextGap(7);
-            Dimension logoSpace = new Dimension((int) (logoW/logoScaleFactor), (int) (logoH/logoScaleFactor) + 10);
-            logo.setMaximumSize(logoSpace);
-            logo.setMinimumSize(logoSpace);
+            boolean loadForIntelliJ = false;
+            InputStream logoInputStream = SwiftSyncLITE.class.getClassLoader().getResourceAsStream("res/SSL_logo.png");
+            if (logoInputStream != null) {
+                BufferedImage logoImage = ImageIO.read(logoInputStream);
+                int logoW = logoImage.getWidth(), logoH = logoImage.getHeight();
+                double logoScaleFactor = 4.5;
+                Image resizedLogoImg = logoImage.getScaledInstance((int) (logoW / logoScaleFactor), (int) (logoH / logoScaleFactor), Image.SCALE_SMOOTH);
+                ImageIcon logoIcon = new ImageIcon(resizedLogoImg);
+                logo.setIcon(logoIcon);
+                logo.setIconTextGap(7);
+                Dimension logoSpace = new Dimension((int) (logoW / logoScaleFactor), (int) (logoH / logoScaleFactor) + 10);
+                logo.setMaximumSize(logoSpace);
+                logo.setMinimumSize(logoSpace);
+            } else {
+                loadForIntelliJ = true;
+            }
 
-            ImageIcon consoleIcon = new ImageIcon(ImageIO.read(new File("res/consoleicon.png")));
-            Image image = consoleIcon.getImage();
-            int iconW = consoleIcon.getIconWidth(), iconH = consoleIcon.getIconHeight();
-            double scaleFactor = 3;
-            Image newimg = image.getScaledInstance((int) ((int) iconW/scaleFactor), (int) ((int) iconH/scaleFactor),  java.awt.Image.SCALE_SMOOTH);
-            consoleIcon = new ImageIcon(newimg);
-            consoleButton.setIcon(consoleIcon);
-            consoleButton.setIconTextGap(7);
+            InputStream consoleIconInputStream = SwiftSyncLITE.class.getClassLoader().getResourceAsStream("res/consoleicon.png");
+            if (consoleIconInputStream != null) {
+                BufferedImage consoleIconImage = ImageIO.read(consoleIconInputStream);
+                int iconW = consoleIconImage.getWidth(), iconH = consoleIconImage.getHeight();
+                double scaleFactor = 3;
+                Image newimg = consoleIconImage.getScaledInstance((int) (iconW / scaleFactor), (int) (iconH / scaleFactor), Image.SCALE_SMOOTH);
+                ImageIcon consoleIcon = new ImageIcon(newimg);
+                consoleButton.setIcon(consoleIcon);
+                consoleButton.setIconTextGap(7);
+            }else {
+                loadForIntelliJ = true;
+            }
 
-            ImageIcon profilesIcon = new ImageIcon(ImageIO.read(new File("res/profilesicon.png")));
-            Image image2 = profilesIcon.getImage();
-            int iconW2 = profilesIcon.getIconWidth(), iconH2 = profilesIcon.getIconHeight();
-            double scaleFactor2 = 3;
-            Image newimg2 = image2.getScaledInstance((int) ((int) iconW2/scaleFactor2), (int) ((int) iconH2/scaleFactor2),  java.awt.Image.SCALE_SMOOTH);
-            profilesIcon = new ImageIcon(newimg2);
-            profilesButton.setIcon(profilesIcon);
-            profilesButton.setIconTextGap(7);
+            InputStream profilesIconInputStream = SwiftSyncLITE.class.getClassLoader().getResourceAsStream("res/profilesicon.png");
+            if (profilesIconInputStream != null) {
+                BufferedImage profilesIconImage = ImageIO.read(profilesIconInputStream);
+                int iconW = profilesIconImage.getWidth(), iconH = profilesIconImage.getHeight();
+                double scaleFactor = 3;
+                Image newimg = profilesIconImage.getScaledInstance((int) (iconW / scaleFactor), (int) (iconH / scaleFactor), Image.SCALE_SMOOTH);
+                ImageIcon consoleIcon = new ImageIcon(newimg);
+                profilesButton.setIcon(consoleIcon);
+                profilesButton.setIconTextGap(7);
+            }else {
+                loadForIntelliJ = true;
+            }
 
-            ImageIcon settingsIcon = new ImageIcon(ImageIO.read(new File("res/settingsicon.png")));
-            Image image3 = settingsIcon.getImage();
-            int iconW3 = settingsIcon.getIconWidth(), iconH3 = settingsIcon.getIconHeight();
-            double scaleFactor3 = 3;
-            Image newimg3 = image3.getScaledInstance((int) ((int) iconW3/scaleFactor3), (int) ((int) iconH3/scaleFactor3),  java.awt.Image.SCALE_SMOOTH);
-            settingsIcon = new ImageIcon(newimg3);
-            settingsButton.setIcon(settingsIcon);
-            settingsButton.setIconTextGap(7);
-        } catch (IOException e) {
-            //nothing
+            InputStream settingsIconInputStream = SwiftSyncLITE.class.getClassLoader().getResourceAsStream("res/settingsicon.png");
+            if (settingsIconInputStream != null) {
+                BufferedImage settingsIconImage = ImageIO.read(settingsIconInputStream);
+                int iconW = settingsIconImage.getWidth(), iconH = settingsIconImage.getHeight();
+                double scaleFactor = 3;
+                Image newimg = settingsIconImage.getScaledInstance((int) (iconW / scaleFactor), (int) (iconH / scaleFactor), Image.SCALE_SMOOTH);
+                ImageIcon consoleIcon = new ImageIcon(newimg);
+                settingsButton.setIcon(consoleIcon);
+                settingsButton.setIconTextGap(7);
+            }else {
+                loadForIntelliJ = true;
+            }
+
+            if(loadForIntelliJ){
+                ImageIcon logoIcon = new ImageIcon(ImageIO.read(new File("res/SSL_logo.png")));
+                Image logoImage = logoIcon.getImage();
+                int logoW = logoIcon.getIconWidth(), logoH = logoIcon.getIconHeight();
+                double logoScaleFactor = 4.5;
+                Image resizedLogoImg = logoImage.getScaledInstance((int) ((int) logoW/logoScaleFactor), (int) ((int) logoH/logoScaleFactor),  java.awt.Image.SCALE_SMOOTH);
+                logoIcon = new ImageIcon(resizedLogoImg);
+                logo.setIcon(logoIcon);
+                logo.setIconTextGap(7);
+                Dimension logoSpace = new Dimension((int) (logoW/logoScaleFactor), (int) (logoH/logoScaleFactor) + 10);
+                logo.setMaximumSize(logoSpace);
+                logo.setMinimumSize(logoSpace);
+
+                ImageIcon consoleIcon = new ImageIcon(ImageIO.read(new File("res/consoleicon.png")));
+                Image image = consoleIcon.getImage();
+                int iconW = consoleIcon.getIconWidth(), iconH = consoleIcon.getIconHeight();
+                double scaleFactor = 3;
+                Image newimg = image.getScaledInstance((int) ((int) iconW/scaleFactor), (int) ((int) iconH/scaleFactor),  java.awt.Image.SCALE_SMOOTH);
+                consoleIcon = new ImageIcon(newimg);
+                consoleButton.setIcon(consoleIcon);
+                consoleButton.setIconTextGap(7);
+
+                ImageIcon profilesIcon = new ImageIcon(ImageIO.read(new File("res/profilesicon.png")));
+                Image image2 = profilesIcon.getImage();
+                int iconW2 = profilesIcon.getIconWidth(), iconH2 = profilesIcon.getIconHeight();
+                double scaleFactor2 = 3;
+                Image newimg2 = image2.getScaledInstance((int) ((int) iconW2/scaleFactor2), (int) ((int) iconH2/scaleFactor2),  java.awt.Image.SCALE_SMOOTH);
+                profilesIcon = new ImageIcon(newimg2);
+                profilesButton.setIcon(profilesIcon);
+                profilesButton.setIconTextGap(7);
+
+                ImageIcon settingsIcon = new ImageIcon(ImageIO.read(new File("res/settingsicon.png")));
+                Image image3 = settingsIcon.getImage();
+                int iconW3 = settingsIcon.getIconWidth(), iconH3 = settingsIcon.getIconHeight();
+                double scaleFactor3 = 3;
+                Image newimg3 = image3.getScaledInstance((int) ((int) iconW3/scaleFactor3), (int) ((int) iconH3/scaleFactor3),  java.awt.Image.SCALE_SMOOTH);
+                settingsIcon = new ImageIcon(newimg3);
+                settingsButton.setIcon(settingsIcon);
+                settingsButton.setIconTextGap(7);
+            }
+        } catch (Exception e) {
+            myPanes.consolePane.append("Error loading application resources.", ERROR_TEXT_COLOR);
         }
+
 
         //sidebarPanel.add(logo); // TODO FIX LOGO LOADING
         sidebarPanel.add(consoleButton);
@@ -142,9 +216,27 @@ public class SwiftSyncLITE {
         sidebarPanel.add(settingsButton);
 
         JPanel welcomePane = new JPanel();
-        JLabel welcomeText = new JLabel("Welcome to SwiftSync LITE!\n\nClick a menu on the sidebar to get started.");
-        welcomeText.setPreferredSize(welcomePane.getPreferredSize());
-        welcomePane.add(welcomeText);
+        welcomePane.setLayout(new BorderLayout());
+        welcomePane.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50)); // Add padding
+
+        JPanel textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel welcomeText = new JLabel("Welcome to SwiftSync LITE!");
+        welcomeText.setHorizontalAlignment(SwingConstants.CENTER);
+        welcomeText.setFont(new Font("Arial", BOLD, 30));
+        welcomeText.setForeground(new Color(50, 122, 183));
+
+        JLabel instructionText = new JLabel("Click a menu on the sidebar to get started.");
+        instructionText.setHorizontalAlignment(SwingConstants.CENTER);
+        instructionText.setFont(new Font("Arial", Font.PLAIN, 20));
+        instructionText.setForeground(new Color(79, 129, 189));
+
+        textPanel.add(welcomeText);
+        textPanel.add(instructionText);
+
+        welcomePane.add(textPanel, BorderLayout.CENTER);
 
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebarPanel, welcomePane);
         splitPane.setEnabled(false);
@@ -230,6 +322,15 @@ public class SwiftSyncLITE {
         splitPane.repaint();
     }
 
+    private void reloadBasicUI(){
+        Color splitPaneColor = (myPanes.settingsPane.getTheme()==0 ? SIDEBAR_BACKGROUND_COLOR:new Color(201, 201, 201));
+        splitPane.setBackground(splitPaneColor);
+        settingsButton.setBackground(splitPaneColor);
+        consoleButton.setBackground(splitPaneColor);
+        profilesButton.setBackground(splitPaneColor);
+        consoleButton.setBackground((myPanes.settingsPane.getTheme()==0 ? CONSOLE_COLOR:new Color(145, 145, 145)));
+    }
+
     private void adjustSplitPane(JSplitPane splitPane){
         splitPane.setDividerLocation(200);
     }
@@ -259,9 +360,17 @@ public class SwiftSyncLITE {
             this.fileEngine = new SSFE(ui);
         }
 
+        public JFrame getFrame(){
+            return ui.mainframe;
+        }
+
         public void setConsolePane(ConsolePane cp){
             this.console = cp;
             fileEngine.setConsolePane(cp);
+        }
+
+        void reloadBasicUI(){
+            ui.reloadBasicUI();
         }
 
         public OperatingSystem getOS(){
@@ -322,14 +431,26 @@ public class SwiftSyncLITE {
         }
 
         void openHelpMenu() {
-            String filePath = "docs/help.html";
-            File file = new File(filePath);
-
             String helpContent = getHelpManualContent();
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-                writer.write(helpContent);
-                filePath = file.getPath();
+            try (InputStream inputStream = SwiftSyncLITE.class.getClassLoader().getResourceAsStream("docs/help.html")) {
+                if (inputStream != null) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                         BufferedWriter writer = new BufferedWriter(new FileWriter("help.html"))) {
+
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            writer.write(line);
+                            writer.newLine();
+                        }
+
+                        // Write the dynamically generated help content to the file
+                        writer.write(helpContent);
+                    }
+                } else {
+                    console.append("Error reading help template: Resource not found.", ERROR_TEXT_COLOR);
+                    return;
+                }
             } catch (IOException e) {
                 console.append("Error creating help file: " + e.getMessage(), ERROR_TEXT_COLOR);
                 return;
@@ -337,16 +458,8 @@ public class SwiftSyncLITE {
 
             // Open the generated HTML file in the default web browser
             try {
-                if (os == OperatingSystem.WINDOWS) {
-                    // For Windows (handle spaces in file path)
-                    Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler \"" + filePath + "\"");
-                } else if (os == OperatingSystem.MACOS) {
-                    // For macOS
-                    Runtime.getRuntime().exec("open \"" + filePath + "\"");
-                } else {
-                    // For Linux (handle spaces in file path)
-                    Runtime.getRuntime().exec("xdg-open \"" + filePath + "\"");
-                }
+                File helpFile = new File("help.html");
+                Desktop.getDesktop().open(helpFile);
             } catch (IOException e) {
                 console.append("Error opening help file: " + e.getMessage(), ERROR_TEXT_COLOR);
             }
@@ -461,6 +574,10 @@ public class SwiftSyncLITE {
     }
 
     public static void main(String[] args) {
-        new SwiftSyncLITE();
+        if(args.length==0){
+            new SwiftSyncLITE();
+        } else if (args[0].endsWith("ssl")){
+            new SwiftSyncLITE(args[0]);
+        }
     }
 }
