@@ -17,6 +17,7 @@ public class SSFE {
     private SwiftSyncLITE app;
     private ConsolePane console;
     private FileIndexer indexer;
+    private Boolean stopReference;
 
     public SSFE(SwiftSyncLITE app){
         this.app = app;
@@ -26,44 +27,53 @@ public class SSFE {
         this.console = cp;
     }
 
-    public void createIndexer(OperatingSystem os,File parent, File local, ConsolePane consolePane){
+    public void createIndexer(OperatingSystem os,File parent, File local, ConsolePane consolePane, Boolean stop){
         this.indexer = new FileIndexer(os,parent,local,consolePane);
+        this.stopReference = stop;
     }
 
     public void startIndexing(){
         this.indexer.index();
     }
 
-    public void sync(ArrayList<SyncTask> tasks){
+    public void sync(ArrayList<SyncTask> tasks,Boolean stopReference){
         if(app.getSyncMode() == Profile.Mode.DEFAULT){
             double progress = 0;
             for (int i = 0; i < tasks.size(); i++) {
                 defaultSync(tasks.get(i));
                 progress = (double) i /tasks.size();
                 console.setProgress(progress);
+                if(stopReference){
+                    console.append("Sync process stopped.", Color.ORANGE);
+                    stopReference = false;
+                    return;
+                }
             }
         }
     }
 
     private void defaultSync(SyncTask task){
-        File childFile, parentFile;
-        childFile = new File(String.valueOf(task.getChildPath()));
-        parentFile = task.getParentFile();
-        try (
-                FileInputStream fis = new FileInputStream(parentFile);
-                FileOutputStream fos = new FileOutputStream(childFile);
-        ) {
+        File childFile = new File(String.valueOf(task.getChildPath()));
+        File parentFile = task.getParentFile();
+
+        try {
+            Files.createDirectories(task.getChildPath().getParent());
+            Files.createFile(task.getChildPath());
+            FileInputStream fis = new FileInputStream(parentFile);
+            FileOutputStream fos = new FileOutputStream(childFile);
             byte[] buffer = new byte[1024]; // 1KB at a time
             int bytesRead;
             while ((bytesRead = fis.read(buffer)) != -1) {
                 fos.write(buffer, 0, bytesRead);
             }
+            fos.close();
         } catch (FileNotFoundException e) {
-            console.append("ERROR: A FileNotFoundException occurred while syncing " + parentFile.getName() +" -> " + e.getMessage(),ERROR_TEXT_COLOR);
+            console.append("ERROR: A FileNotFoundException occurred while syncing " + parentFile.getName() + " -> " + e.getMessage(), ERROR_TEXT_COLOR);
         } catch (IOException e) {
-            console.append("ERROR: An IOException occurred while syncing " + parentFile.getName() +" -> " + e.getMessage(), ERROR_TEXT_COLOR);
+            console.append("ERROR: An IOException occurred while syncing " + parentFile.getName() + " -> "  + e.getMessage(), ERROR_TEXT_COLOR);
         }
     }
+
 
     public ArrayList<SyncTask> getIndexedTasks(){
         return this.indexer.tasksFound;
@@ -108,6 +118,7 @@ public class SSFE {
         private File master, local;
         private String localRootName, masterRootName;
         private ConsolePane console;
+        private int taskNum = 0;
 
         public FileIndexer(OperatingSystem os,File parent, File local, ConsolePane consolePane){
             tasksFound = new ArrayList<>();
@@ -121,92 +132,68 @@ public class SSFE {
         }
 
         public void index(){
+            taskNum = 0;
             indexLocal(local);
             indexMaster(master);
-        }
-
-        private void index(File child, File parentSubDir){
-            try {
-                if (parentSubDir.isDirectory()) { // narrow all parent files down to their individual paths
-                    for (int i = 0; i < parentSubDir.listFiles().length; i++) {
-                        index(child, Objects.requireNonNull(parentSubDir.listFiles())[i]);
-                    }
-                } else {
-                    // find the theoretical pathname of the file inside the child folder
-                    String pathOfChildSubDir = child.getPath() + (userOS == MACOS ? "/" : "\\") + getFilePathFromRoot(parentSubDir, parentSubDir.getName());
-                    Path childPath = Paths.get(pathOfChildSubDir);
-
-                    if (!Files.exists(childPath)) {
-                        SyncTask newTask = new SyncTask(parentSubDir,childPath);
-                        tasksFound.add(newTask);
-                    } else if (Files.exists(childPath) && parentSubDir.exists() && fileOverwriteEnabled) {
-                        SyncTask newTask = new SyncTask(parentSubDir,childPath);
-                        tasksFound.add(newTask);
-                    }
-                }
-            } catch (NullPointerException e){
-            }
         }
 
         private void indexLocal(File dir){
             try {
                 if (dir.isDirectory()) {
-                    for (int j = 0; j < dir.listFiles().length; j++) {
-                        indexLocal(Objects.requireNonNull(dir.listFiles())[j]);
+                    for (File file : Objects.requireNonNull(dir.listFiles())) {
+                        indexLocal(file);
                     }
                 } else {
-                    String pathOfMasterFile = master.getPath() + (userOS == MACOS ? "/" : "\\") + getFilePathFromRoot(dir,localRootName);
+                    File masterFile = new File(master, getFilePathFromRoot(dir, localRootName));
+                    Path masterPath = masterFile.toPath();
 
-                    // convert String to a Path object
-                    Path masterPath = Paths.get(pathOfMasterFile);
-                    boolean exists = Files.exists(masterPath);
-
-                    // check to see if the file exists in the master directory
-                    if(!exists){
-                        // if it doesn't exist, add it to the list of tasks
-                        SyncTask newTask = new SyncTask(dir,masterPath);
+                    if (!masterFile.exists()) {
+                        SyncTask newTask = new SyncTask(dir, masterPath,++taskNum);
                         tasksFound.add(newTask);
-                    } else if (Files.exists(masterPath) && dir.exists() && fileOverwriteEnabled){
-                        File masterFile = new File(String.valueOf(masterPath));
-                        // if it does exist and the local file is larger than the master file, overwrite it
-                        if(dir.length()>masterFile.length()){
-                            SyncTask newTask = new SyncTask(dir,masterPath);
+                    } else if (masterFile.exists() && dir.exists() && fileOverwriteEnabled) {
+                        // Check if local file size is larger than master file size
+                        if (dir.length() > masterFile.length()) {
+                            SyncTask newTask = new SyncTask(dir, masterPath,++taskNum);
                             tasksFound.add(newTask);
                         }
                     }
                 }
-            } catch (NullPointerException e){
+            } catch (NullPointerException e) {
+                // Handle null pointer exception
+                console.append("ERROR: NullPointerException occurred while indexing local directory: " + e.getMessage(), ERROR_TEXT_COLOR);
+            } catch (SecurityException e) {
+                // Handle security exception
+                console.append("ERROR: SecurityException occurred while indexing local directory: " + e.getMessage(), ERROR_TEXT_COLOR);
             }
         }
 
         private void indexMaster(File dir){
             try {
                 if (dir.isDirectory()) {
-                    for (int j = 0; j < dir.listFiles().length; j++) {
-                        indexMaster(Objects.requireNonNull(dir.listFiles())[j]);
+                    for (File file : Objects.requireNonNull(dir.listFiles())) {
+                        indexMaster(file);
                     }
                 } else {
-                    String pathOfLocalFile = local.getPath() + (userOS == MACOS ? "/" : "\\") + getFilePathFromRoot(dir,masterRootName);
+                    File localFile = new File(local, getFilePathFromRoot(dir, masterRootName));
+                    Path localPath = localFile.toPath();
 
-                    // find the corresponding path for the local directory
-                    Path localPath = Paths.get(pathOfLocalFile);
-                    boolean exists = Files.exists(localPath);
-
-                    // check to see if the file exists in the opposite directory
-                    if(!exists){
-                        // if it doesn't exist, add it to the list of tasks
-                        SyncTask newTask = new SyncTask(dir,localPath);
+                    if (!localFile.exists()) {
+                        SyncTask newTask = new SyncTask(dir, localPath,++taskNum);
                         tasksFound.add(newTask);
-                    } else if (Files.exists(localPath) && dir.exists() && fileOverwriteEnabled){
-                        File localFile = new File(String.valueOf(localPath));
-                        // if it does exist and the local file is larger than the master file, overwrite it
-                        if(dir.length()>localFile.length()){
-                            SyncTask newTask = new SyncTask(dir,localPath);
+                    } else if (localFile.exists() && dir.exists() && fileOverwriteEnabled) {
+                        // Check if master file size is larger than local file size
+                        if (dir.length() < localFile.length()) {
+                            SyncTask newTask = new SyncTask(dir, localPath,++taskNum);
                             tasksFound.add(newTask);
                         }
                     }
                 }
-            } catch (NullPointerException e){
+            } catch (NullPointerException e) {
+                // Handle null pointer exception
+                console.append("ERROR: NullPointerException occurred while indexing master directory: " + e.getMessage(), ERROR_TEXT_COLOR);
+            } catch (SecurityException e) {
+                // Handle security exception
+                console.append("ERROR: SecurityException occurred while indexing master directory: " + e.getMessage(), ERROR_TEXT_COLOR);
             }
         }
 
@@ -232,10 +219,17 @@ public class SSFE {
 
         private File parent;
         private Path childPath;
+        private String debugID = "--";
 
         public SyncTask(File parent, Path childPath) {
             this.parent = parent;
             this.childPath = childPath;
+        }
+
+        public SyncTask(File parent, Path childPath, int debugID) {
+            this.parent = parent;
+            this.childPath = childPath;
+            this.debugID = String.valueOf(debugID);
         }
 
         public double getSize() {
@@ -260,6 +254,10 @@ public class SSFE {
 
         public String toString() {
             return parent.getPath() + "\t→\t " + childPath;
+        }
+
+        public String getID(){
+            return this.debugID;
         }
     }
 

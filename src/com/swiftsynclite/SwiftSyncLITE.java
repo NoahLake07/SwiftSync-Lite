@@ -352,6 +352,7 @@ public class SwiftSyncLITE {
         private SwiftSyncLITE ui;
         private ConsolePane console;
         private SSFE fileEngine;
+        private Boolean stopProcess = false;
 
         Controller(Profile profile, SwiftSyncLITE parentUI){
             this.currentProfile = profile;
@@ -423,6 +424,11 @@ public class SwiftSyncLITE {
                     break;
                 case "profile page":
                     replaceContentPane(splitPane,myPanes.profilesPane);
+                    break;
+                case "stop":
+                    console.append("Stopping process...", new Color(236, 200, 90));
+                    this.stopProcess = true;
+
                     break;
                 default:
                     console.append("That command was not recognized. Please try again...", ERROR_TEXT_COLOR);
@@ -519,11 +525,12 @@ public class SwiftSyncLITE {
         }
 
         private void synchronize(){
+            stopProcess = false;
             ExecutorService executor = Executors.newFixedThreadPool(1);
             executor.submit(new Runnable() {
                 @Override
                 public void run() {
-                    fileEngine.createIndexer(getOS(),getCurrentProfile().getMaster(),getCurrentProfile().getLocal(),getMyPanes().consolePane);
+                    fileEngine.createIndexer(getOS(),getCurrentProfile().getMaster(),getCurrentProfile().getLocal(),getMyPanes().consolePane,stopProcess);
                     fileEngine.startIndexing();
                     console.showProcessBar();
                     console.setStatus("Indexing...");
@@ -539,7 +546,7 @@ public class SwiftSyncLITE {
                         console.setProgress(0);
                     }
 
-                    fileEngine.sync(fileEngine.getIndexedTasks());
+                    fileEngine.sync(fileEngine.getIndexedTasks(), stopProcess);
                     console.setProgress(1);
                     console.setStatus("Ready");
                     console.append("Sync complete. System ready.", new Color(51, 169, 17));

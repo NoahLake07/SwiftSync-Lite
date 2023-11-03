@@ -312,12 +312,16 @@ public class ProfilesPane extends DefaultPane {
             actionRow.setLayout(new FlowLayout(FlowLayout.RIGHT));
             actionRow.add(createProfileButton);
 
+            JPanel headerRow = new JPanel();
+            headerRow.setBorder(BorderFactory.createEmptyBorder(0,0,10,0));
+            headerRow.setLayout(new FlowLayout(FlowLayout.LEFT));
             JLabel header = new JLabel("New Profile");
             header.setHorizontalTextPosition(LEFT);
             header.setFont(new Font("Arial", Font.BOLD, 20));
             panel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+            headerRow.add(header);
 
-            panel.add(header);
+            panel.add(headerRow);
             header.setHorizontalAlignment(LEFT);
             panel.add(new JSeparator(JSeparator.HORIZONTAL));
             panel.add(namePanel);
