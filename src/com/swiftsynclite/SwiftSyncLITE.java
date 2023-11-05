@@ -428,7 +428,9 @@ public class SwiftSyncLITE {
                 case "stop":
                     console.append("Stopping process...", new Color(236, 200, 90));
                     this.stopProcess = true;
-
+                    break;
+                case "index":
+                    indexOnly();
                     break;
                 default:
                     console.append("That command was not recognized. Please try again...", ERROR_TEXT_COLOR);
@@ -522,6 +524,21 @@ public class SwiftSyncLITE {
                     + "</body></html>";
 
             return helpContent;
+        }
+
+        private void indexOnly(){
+            fileEngine.createIndexer(getOS(),getCurrentProfile().getMaster(),getCurrentProfile().getLocal(),getMyPanes().consolePane,stopProcess);
+            fileEngine.startIndexing();
+            console.showProcessBar();
+            console.setStatus("Indexing...");
+            console.append("Indexing directories...", new Color(136, 165, 199));
+
+            if(fileEngine.getIndexedTasks().isEmpty()){
+                console.append("No tasks found.");
+                console.setStatus("Ready");
+            } else {
+                console.append("Found " + fileEngine.getIndexedTasks().size() + " tasks.");
+            }
         }
 
         private void synchronize(){
