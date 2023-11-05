@@ -37,11 +37,27 @@ public class Profile implements Serializable {
     public Mode getMode(){
         return this.mode;
     }
+    void setMode(Mode mode){
+        this.mode = mode;
+    }
 
     public enum Mode {
         DEFAULT,
         SWIFTSYNC,
-        NIO2
+        NIO2;
+
+        static String getDescription(Mode m){
+            if(m==DEFAULT){
+                return "Default desc";
+            }
+            if(m==NIO2){
+                return "NIO2 desc";
+            }
+            if(m==SWIFTSYNC){
+                return "SwiftSync desc";
+            }
+            return "not supported";
+        }
     }
 
 }

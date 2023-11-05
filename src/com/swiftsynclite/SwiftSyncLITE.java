@@ -3,6 +3,7 @@ package com.swiftsynclite;
 import com.formdev.flatlaf.FlatDarculaLaf;
 
 import javax.imageio.ImageIO;
+import javax.sound.midi.Sequencer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -34,6 +35,8 @@ public class SwiftSyncLITE {
     private JFrame mainframe;
 
     private Controller SSFE_controller = null;
+
+    private boolean isDarkMode = true;
 
     private OperatingSystem os;
 
@@ -342,6 +345,10 @@ public class SwiftSyncLITE {
         return SSFE_controller.getCurrentProfile().getMode();
     }
 
+    public void setSyncMode(Profile.Mode mode){
+        SSFE_controller.setMode(mode);
+    }
+
     public OperatingSystem getOS(){
         return this.os;
     }
@@ -353,10 +360,16 @@ public class SwiftSyncLITE {
         private ConsolePane console;
         private SSFE fileEngine;
         private Boolean stopProcess = false;
+        private Profile.Mode profileDefaultMode;
 
         Controller(Profile profile, SwiftSyncLITE parentUI){
             this.currentProfile = profile;
             this.ui = parentUI;
+            if(profile == null){
+                this.profileDefaultMode = null;
+            } else {
+                this.profileDefaultMode = currentProfile.getMode();
+            }
 
             this.fileEngine = new SSFE(ui);
         }
@@ -368,6 +381,10 @@ public class SwiftSyncLITE {
         public void setConsolePane(ConsolePane cp){
             this.console = cp;
             fileEngine.setConsolePane(cp);
+        }
+
+        void setMode(Profile.Mode mode){
+            currentProfile.setMode(mode);
         }
 
         void reloadBasicUI(){
@@ -431,6 +448,18 @@ public class SwiftSyncLITE {
                     break;
                 case "index":
                     indexOnly();
+                    break;
+                case "swiftsync mode":
+                    setSyncMode(Profile.Mode.SWIFTSYNC);
+                    console.append("Sync mode now set to '" + getSyncMode() + "'",new Color(150, 32, 166));
+                    break;
+                case "default mode":
+                    setSyncMode(Profile.Mode.DEFAULT);
+                    console.append("Sync mode now set to '" + getSyncMode() + "'",new Color(150, 32, 166));
+                    break;
+                case "nio2 mode":
+                    setSyncMode(Profile.Mode.NIO2);
+                    console.append("Sync mode now set to '" + getSyncMode() + "'",new Color(150, 32, 166));
                     break;
                 default:
                     console.append("That command was not recognized. Please try again...", ERROR_TEXT_COLOR);
@@ -573,11 +602,33 @@ public class SwiftSyncLITE {
 
         public void setProfile(Profile p){
             this.currentProfile = p;
+            this.profileDefaultMode = currentProfile.getMode();
+            myPanes.settingsPane = new SettingsPane(this);
+        }
+
+        public Profile.Mode getMode(){
+            if(this.currentProfile == null){
+                return Profile.Mode.DEFAULT;
+            }
+            return this.currentProfile.getMode();
         }
 
         public Profile getCurrentProfile(){
             return this.currentProfile;
         }
+
+        public boolean isDarkMode(){
+            return ui.isDarkMode;
+        }
+
+        public void setDarkMode(boolean b){
+            ui.isDarkMode = b;
+        }
+
+        public Profile.Mode getDefaultMode(){
+            return this.profileDefaultMode;
+        }
+
     }
 
     class Panes {
