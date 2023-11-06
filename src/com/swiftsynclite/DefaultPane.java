@@ -8,12 +8,13 @@ public class DefaultPane extends JPanel {
     JSeparator separator;
     static final Font HEADER_FONT = new Font("Arial",Font.BOLD, 35);
     DefaultPane(String headerText){
+        this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
         this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JPanel headerPanel = new JPanel();
         headerPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-        header = new JLabel((headerText == null ? "com.swiftsynclite.DefaultPane" : headerText));
+        header = new JLabel((headerText == null ? "DefaultPane" : headerText));
         header.setFont(HEADER_FONT);
         header.setHorizontalAlignment(SwingConstants.LEFT);
         header.setHorizontalTextPosition(SwingConstants.LEFT);
@@ -24,6 +25,5 @@ public class DefaultPane extends JPanel {
         headerPanel.add(header);
         add(headerPanel);
         add(separator);
-        this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
     }
 }

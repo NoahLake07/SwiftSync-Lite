@@ -48,13 +48,19 @@ public class Profile implements Serializable {
 
         static String getDescription(Mode m){
             if(m==DEFAULT){
-                return "Default desc";
+                return "DefaultSync is a basic and most common method for copying files, " +
+                        "suitable for everyday use and small to medium-sized transfers where " +
+                        "simplicity is key.";
             }
             if(m==NIO2){
-                return "NIO2 desc";
+                return "NIO2Sync offers improved performance for medium-sized transfers by " +
+                        "efficiently handling file operations, making it ideal for scenarios " +
+                        "requiring a balance between speed and simplicity.";
             }
             if(m==SWIFTSYNC){
-                return "SwiftSync desc";
+                return "SwiftSync provides the fastest file transfers, especially for large files " +
+                        "and multiple concurrent operations, making it perfect for large-scale data " +
+                        "backups and time-sensitive tasks.";
             }
             return "not supported";
         }

@@ -138,8 +138,10 @@ public class ProfilesPane extends DefaultPane {
                 openMasterBtn.setEnabled(true);
                 openLocalBtn.setToolTipText("Change local directory root");
                 openMasterBtn.setToolTipText("Change local directory root");
-            } catch (IOException | ClassNotFoundException ex) {
-                JOptionPane.showMessageDialog(null,"There was an error loading the profile.\n"+ex.getMessage(),"Deserialization Error",JOptionPane.ERROR_MESSAGE);
+            } catch (IOException ioe) {
+                JOptionPane.showMessageDialog(null,"There was an error loading the profile.\n"+ioe.getMessage(),"Deserialization Error",JOptionPane.ERROR_MESSAGE);
+            } catch (ClassNotFoundException ex){
+                JOptionPane.showMessageDialog(null,"This profile is from an outdated version of SwiftSync LITE.\n"+ex.getMessage(),"Deserialization Error",JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -295,7 +297,7 @@ public class ProfilesPane extends DefaultPane {
                     String localDirectoryPath = localDirField.getText();
                     Profile.Mode modeSelected = mode.get();
 
-                    Profile newProfile = new Profile(profileName, masterDirectoryPath, localDirectoryPath, modeSelected);
+                    Profile newProfile = new Profile(profileName, localDirectoryPath, masterDirectoryPath, modeSelected);
                     parentApp.setProfile(newProfile);
                     updater.run();
 

@@ -80,7 +80,7 @@ public class SwiftSyncLITE {
 
     private void launch() {
         mainframe = new JFrame("SwiftSync LITE");
-        mainframe.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        mainframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainframe.setSize(800, 600);
         mainframe.setMinimumSize(new Dimension(660,500));
 
@@ -385,6 +385,7 @@ public class SwiftSyncLITE {
 
         void setMode(Profile.Mode mode){
             currentProfile.setMode(mode);
+            console.append("Mode now set to " + mode, new Color(164, 68, 178));
         }
 
         void reloadBasicUI(){
@@ -557,7 +558,7 @@ public class SwiftSyncLITE {
 
         private void indexOnly(){
             fileEngine.createIndexer(getOS(),getCurrentProfile().getMaster(),getCurrentProfile().getLocal(),getMyPanes().consolePane,stopProcess);
-            fileEngine.startIndexing();
+            long size = fileEngine.startIndexing();
             console.showProcessBar();
             console.setStatus("Indexing...");
             console.append("Indexing directories...", new Color(136, 165, 199));
@@ -566,7 +567,7 @@ public class SwiftSyncLITE {
                 console.append("No tasks found.");
                 console.setStatus("Ready");
             } else {
-                console.append("Found " + fileEngine.getIndexedTasks().size() + " tasks.");
+                console.append("Found " + fileEngine.getIndexedTasks().size() + " tasks. [~"+((int)size / 1024 / 1024 / 1024) + " GB]");
             }
         }
 
@@ -577,7 +578,7 @@ public class SwiftSyncLITE {
                 @Override
                 public void run() {
                     fileEngine.createIndexer(getOS(),getCurrentProfile().getMaster(),getCurrentProfile().getLocal(),getMyPanes().consolePane,stopProcess);
-                    fileEngine.startIndexing();
+                    long size = fileEngine.startIndexing();
                     console.showProcessBar();
                     console.setStatus("Indexing...");
                     console.append("Indexing directories...", new Color(136, 165, 199));
@@ -586,16 +587,18 @@ public class SwiftSyncLITE {
                         console.append("No tasks found.");
                         console.setStatus("Ready");
                     } else {
-                        console.append("Found " + fileEngine.getIndexedTasks().size() + " tasks. Syncing now.");
+                        console.append("Found " + fileEngine.getIndexedTasks().size() + " tasks. [~"+((int)size / 1024 / 1024 / 1024) + " GB]");
                         console.setStatus("Syncing");
                         console.getProgressBar().setIndeterminate(false);
                         console.setProgress(0);
                     }
 
+                    console.showDetailsBtn(true);
                     fileEngine.sync(fileEngine.getIndexedTasks(), stopProcess);
                     console.setProgress(1);
                     console.setStatus("Ready");
                     console.append("Sync complete. System ready.", new Color(51, 169, 17));
+                    console.showDetailsBtn(false);
                 }
             });
         }
@@ -627,6 +630,10 @@ public class SwiftSyncLITE {
 
         public Profile.Mode getDefaultMode(){
             return this.profileDefaultMode;
+        }
+
+        public void setBufferSize(int size){
+            fileEngine.setBufferSize(size);
         }
 
     }

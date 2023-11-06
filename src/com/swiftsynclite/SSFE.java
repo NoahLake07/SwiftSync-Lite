@@ -22,7 +22,8 @@ public class SSFE {
     private FileIndexer indexer;
     private Boolean stopReference;
     public static final int KB = 1024;
-    private static int byteTransfer = KB*4;
+    private static int byteTransfer = KB*8;
+    private long allTaskSizes = 0, allByteProgress = 0;
 
     public SSFE(SwiftSyncLITE app){
         this.app = app;
@@ -45,14 +46,15 @@ public class SSFE {
         return byteTransfer;
     }
 
-    public void startIndexing(){
-        this.indexer.index();
+    public long startIndexing(){
+        return this.indexer.index();
     }
 
     public void sync(ArrayList<SyncTask> tasks, Boolean stopReference) {
         long totalSize = calculateTotalSize(tasks); // Calculate total size of all tasks
         long completedSize = 0; // Variable to keep track of completed size
         double progress = 0;
+        allByteProgress = 0;
 
         for (int i = 0; i < tasks.size(); i++) {
             SyncTask currentTask = tasks.get(i);
@@ -60,15 +62,17 @@ public class SSFE {
 
             if (app.getSyncMode() == Profile.Mode.DEFAULT) {
                 defaultSync(currentTask);
+                completedSize += taskSize; // Update completed size after each task
+                progress = (double) completedSize / totalSize;
+                console.setProgress(progress);
             } else if (app.getSyncMode() == Profile.Mode.NIO2) {
                 nio2sync(currentTask);
+                completedSize += taskSize; // Update completed size after each task
+                progress = (double) completedSize / totalSize;
+                console.setProgress(progress);
             } else if (app.getSyncMode() == Profile.Mode.SWIFTSYNC) {
-                swiftSync(currentTask);
+                swiftSync(currentTask,i+1,tasks.size());
             }
-
-            completedSize += taskSize; // Update completed size after each task
-            progress = (double) completedSize / totalSize;
-            console.setProgress(progress);
 
             if (stopReference) {
                 console.append("Sync process stopped.", Color.ORANGE);
@@ -121,16 +125,18 @@ public class SSFE {
         }
     }
 
-    private void swiftSync(SyncTask task) {
+    private void swiftSync(SyncTask task, int taskID, int totalTaskQty) {
         File childFile = new File(String.valueOf(task.getChildPath()));
         File parentFile = task.getParentFile();
+
+        console.setTaskLabel(task.toString());
 
         try {
             Files.createDirectories(task.getChildPath().getParent());
             AsynchronousFileChannel sourceChannel = AsynchronousFileChannel.open(parentFile.toPath(), StandardOpenOption.READ);
             AsynchronousFileChannel destinationChannel = AsynchronousFileChannel.open(childFile.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 
-            ByteBuffer buffer = ByteBuffer.allocate(8192); // 8 KB buffer size
+            ByteBuffer buffer = ByteBuffer.allocate(byteTransfer);
             long position = 0; // Initial position in the file
             long totalBytesTransferred = 0; // Total bytes transferred for the current task
             long fileSize = task.getFileSize(); // Total size of the file for the current task
@@ -150,16 +156,16 @@ public class SSFE {
                 // Update position and totalBytesTransferred based on bytes read and written
                 position += bytesRead;
                 totalBytesTransferred += bytesWritten;
+                allByteProgress += bytesWritten;
 
                 // Update progress dynamically
-                double progress = (double) totalBytesTransferred / fileSize;
-                console.setProgress(progress);
+                console.setTaskProgress((double) totalBytesTransferred/fileSize);
             }
 
             // Close channels after transfer completion
             sourceChannel.close();
             destinationChannel.close();
-
+            console.setProgress((double) (taskID/totalTaskQty));
         } catch (IOException | InterruptedException | ExecutionException e) {
             console.append("ERROR: An error occurred while syncing " + parentFile.getName() + " -> " + e.getMessage(), ERROR_TEXT_COLOR);
         }
@@ -177,7 +183,7 @@ public class SSFE {
                         sourceChannel.close();
                         destinationChannel.close();
                     } catch (IOException e) {
-                        // Handle channel close failure
+                        console.append(e.getMessage(),ERROR_TEXT_COLOR);
                     }
                 }
             }
@@ -207,6 +213,10 @@ public class SSFE {
 
     public ArrayList<SyncTask> getIndexedTasks(){
         return this.indexer.tasksFound;
+    }
+
+    public void setBufferSize(int size){
+        byteTransfer = size;
     }
 
     /**
@@ -262,15 +272,15 @@ public class SSFE {
             this.masterRootName = master.getName();
         }
 
-        public void index(){
+        public long index(){
+            allTaskSizes = 0;
             taskNum = 0;
             indexLocal(local);
             indexMaster(master);
-            if(debug){
-                for (int i = 0; i < tasksFound.size(); i++) {
-                    System.out.println("Task " + i + ":\t" + tasksFound.get(i));
-                }
+            for (int i = 0; i < tasksFound.size(); i++) {
+                allTaskSizes += tasksFound.get(i).getFileSize();
             }
+            return allTaskSizes;
         }
 
         private void indexLocal(File dir){

@@ -4,10 +4,11 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import static com.swiftsynclite.SSFE.KB;
 
 public class SettingsPane extends DefaultPane {
     private SwiftSyncLITE.Controller parentApp;
@@ -19,19 +20,25 @@ public class SettingsPane extends DefaultPane {
     private static final Color UNSELECTED_COLOR_DARK_MODE = new Color(56, 56, 56);
     private static final Color SELECTED_COLOR_LIGHT_MODE = new Color(220, 220, 220);
     private static final Color UNSELECTED_COLOR_LIGHT_MODE = new Color(143, 143, 143);
+    private static final Color ABOUT_COLOR_LIGHT_MODE = new Color(218, 216, 169);
+    private static final Color ABOUT_COLOR_DARK_MODE = new Color(70, 72, 73);
 
-    private JTextPane aboutText;
+    private String modeDesc = "";
+    private Profile.Mode selectedMode = Profile.Mode.DEFAULT;
+    private JLabel modeDescLabel;
+    private JPanel modeDescPanel;
+    private JSlider slider;
 
     SettingsPane(SwiftSyncLITE.Controller parentApp) {
         super("System Settings");
         this.parentApp = parentApp;
         this.header.setHorizontalAlignment(SwingConstants.LEFT);
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         // * UI SETTINGS
         JPanel uiSettings = new JPanel();
         uiSettings.setLayout(new BoxLayout(uiSettings,BoxLayout.Y_AXIS));
         uiSettings.setBorder(BorderFactory.createTitledBorder("User Interface Settings"));
+        uiSettings.setMaximumSize(new Dimension(Short.MAX_VALUE,30));
 
         // UI SETTINGS > THEME
         JPanel themePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -48,7 +55,6 @@ public class SettingsPane extends DefaultPane {
         lightThemeRadioButton.setSelected(!parentApp.isDarkMode());
 
         uiSettings.add(themePanel);
-        uiSettings.setMaximumSize(new Dimension(Short.MAX_VALUE,20));
 
         // * SYNC SETTINGS
         JPanel syncSettings = new JPanel();
@@ -83,40 +89,71 @@ public class SettingsPane extends DefaultPane {
         setCurrentModePanel.add(swiftsyncBtn);
 
         // SYNC SETTINGS > SYNC MODE > ABOUT CURRENT MODE
-        JPanel aboutMode = new JPanel();
-        aboutMode.setLayout(new FlowLayout(FlowLayout.LEFT));
-        aboutText = new JTextPane();
-        aboutText.setEditable(false);
-        if(parentApp.getMode() != null){
-            aboutText.setText(Profile.Mode.getDescription(parentApp.getMode()));
+        modeDescPanel = new JPanel();
+        modeDescLabel = new JLabel("<html><body style='width: 100%;'>" + modeDesc + "</body></html>");
+        modeDescLabel.setVerticalAlignment(SwingConstants.TOP);
+
+        modeDescPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        modeDescPanel.add(modeDescLabel);
+
+        modeDescLabel.setMaximumSize(new Dimension(10, 20));
+        modeDescLabel.setBackground(Color.BLACK);
+
+        // SYNC SETTINGS > BYTE ALLOCATION SIZE
+        JPanel byteAllocationPanel = new JPanel();
+        byteAllocationPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        byteAllocationPanel.setBorder(BorderFactory.createEmptyBorder(7,0,0,0));
+        JLabel allocationLabel = new JLabel("Transfer Buffer Allocation (KB):");
+        slider = new JSlider(JSlider.HORIZONTAL, 0, 15, 8);
+        slider.setMinorTickSpacing(1);
+        slider.setMajorTickSpacing(5);
+        slider.setPaintLabels(true);
+        slider.setPaintTicks(true);
+        slider.setSnapToTicks(true);
+        slider.addChangeListener(e->{
+            if(slider.getValue()>12){
+                slider.setForeground(Color.YELLOW);
+            } else {
+                slider.setForeground(new Color(64, 131, 197));
+            }
+        });
+        byteAllocationPanel.add(allocationLabel);
+        byteAllocationPanel.add(slider);
+
+        if (parentApp.getCurrentProfile() != null) {
+            modeDesc = (Profile.Mode.getDescription(parentApp.getMode()));
         } else {
-            aboutText.setText("N/A - Load a profile to see a mode description");
+            modeDesc = ("N/A - Load a profile to see a mode description");
         }
+
+        modeDescPanel.setBackground((parentApp.isDarkMode() ? ABOUT_COLOR_DARK_MODE : ABOUT_COLOR_LIGHT_MODE));
+        modeDescLabel.setText(modeDesc);
 
         // SYNC SETTINGS > SYNC MODE > CURRENT MODE BTN ACTIONS
         defaultBtn.addActionListener(e->{
             Profile.Mode newMode = Profile.Mode.DEFAULT;
-            parentApp.setMode(newMode);
+            selectedMode = newMode;
             updateButtons(defaultBtn,nio2Btn,swiftsyncBtn,newMode);
         });
         nio2Btn.addActionListener(e->{
             Profile.Mode newMode = Profile.Mode.NIO2;
-            parentApp.setMode(newMode);
+            selectedMode = newMode;
             updateButtons(defaultBtn,nio2Btn,swiftsyncBtn,newMode);
         });
         swiftsyncBtn.addActionListener(e->{
             Profile.Mode newMode = Profile.Mode.SWIFTSYNC;
-            parentApp.setMode(newMode);
+            selectedMode = newMode;
             updateButtons(defaultBtn,nio2Btn,swiftsyncBtn,newMode);
         });
 
         // SYNC SETTINGS > SYNC MODE (ADDING PANELS)
         syncMode.add(defaultSyncMode);
         syncMode.add(setCurrentModePanel);
-        syncMode.add(aboutMode);
+        syncMode.add(modeDescPanel);
         syncMode.setPreferredSize(new Dimension(Short.MAX_VALUE,syncMode.getPreferredSize().height));
         syncSettings.add(syncMode);
-        syncSettings.setMaximumSize(new Dimension(Short.MAX_VALUE,40));
+        syncSettings.add(byteAllocationPanel);
+        syncSettings.setMaximumSize(new Dimension(Short.MAX_VALUE,70));
         if(parentApp.getDefaultMode()==null){
             defaultBtn.setEnabled(false);
             nio2Btn.setEnabled(false);
@@ -162,12 +199,15 @@ public class SettingsPane extends DefaultPane {
         def.setBackground((mode == Profile.Mode.DEFAULT ? selectedColor: unselectedColor));
         nio.setBackground((mode == Profile.Mode.NIO2 ? selectedColor: unselectedColor));
         ss.setBackground((mode == Profile.Mode.SWIFTSYNC ? selectedColor: unselectedColor));
+        modeDescPanel.setBackground((parentApp.isDarkMode() ? ABOUT_COLOR_DARK_MODE: ABOUT_COLOR_LIGHT_MODE));
+        selectedMode = mode;
 
         if(parentApp.getMode() != null){
-            aboutText.setText(Profile.Mode.getDescription(parentApp.getMode()));
+            modeDesc = (Profile.Mode.getDescription(selectedMode));
         } else {
-            aboutText.setText("N/A - Load a profile to see a mode description");
+            modeDesc =("N/A - Load a profile to see a mode description");
         }
+        modeDescLabel.setText(modeDesc);
     }
 
     private void applySettings() {
@@ -188,7 +228,8 @@ public class SettingsPane extends DefaultPane {
         }
 
         // * SYNC SETTINGS
-        // todo apply sync settings
+        parentApp.setMode(selectedMode);
+        parentApp.setBufferSize(slider.getValue()*KB);
 
         // Show a confirmation message to the user.
         JOptionPane.showMessageDialog(this, "Settings applied successfully.", "Settings Applied", JOptionPane.INFORMATION_MESSAGE);
