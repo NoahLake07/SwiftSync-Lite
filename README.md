@@ -19,7 +19,7 @@ To run SwiftSync LITE, ensure you have Java installed on your system. You can do
 To just download the latest release as a jar file, download it from the [GitHub repository](https://github.com/NoahLake07/SwiftSyncLITE) and execute the JAR file.
 
 To install SwiftSync LITE with all its core features and functionality, use the dedicated application installer.
-- **Windows:**   [SwiftSync LITE Installer for Windows](https://github.com/NoahLake07/SwiftSyncLITE/blob/main/versions/v0.5.1/SSL%20Installer%20for%20Windows%20v0.5.1.jar).
+- **Windows:**   [SwiftSync LITE Installer for Windows](https://github.com/NoahLake07/SwiftSyncLITE/blob/main/versions/v0.5.3/SSL_Installer%20v0.5.3.jar) (v0.5.3)
 - **Mac:**       *not yet available*
 
 ## Usage
