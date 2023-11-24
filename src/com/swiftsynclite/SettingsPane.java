@@ -102,7 +102,7 @@ public class SettingsPane extends DefaultPane {
         // SYNC SETTINGS > BYTE ALLOCATION SIZE
         JPanel byteAllocationPanel = new JPanel();
         byteAllocationPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        byteAllocationPanel.setBorder(BorderFactory.createEmptyBorder(7,0,0,0));
+        byteAllocationPanel.setBorder(BorderFactory.createEmptyBorder(10,0,0,0));
         JLabel allocationLabel = new JLabel("Transfer Buffer Allocation (KB):");
         slider = new JSlider(JSlider.HORIZONTAL, 0, 15, 8);
         slider.setMinorTickSpacing(1);
@@ -110,7 +110,7 @@ public class SettingsPane extends DefaultPane {
         slider.setPaintLabels(true);
         slider.setPaintTicks(true);
         slider.setSnapToTicks(true);
-        slider.addChangeListener(e->{
+        slider.addChangeListener(l->{
             if(slider.getValue()>12){
                 slider.setForeground(Color.YELLOW);
             } else {
@@ -119,6 +119,17 @@ public class SettingsPane extends DefaultPane {
         });
         byteAllocationPanel.add(allocationLabel);
         byteAllocationPanel.add(slider);
+
+        // SYNC SETTINGS > BYTE ALLOCATION SIZE > HARDWARE TEST
+        JPanel testPanel = new JPanel();
+        testPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        JLabel testDesc = new JLabel("Not sure what byte allocation you should use?");
+        JButton testBtn = new JButton("Run Test");
+        testBtn.addActionListener(e -> {
+            parentApp.runByteTest();
+        });
+        testPanel.add(testDesc);
+        testPanel.add(testBtn);
 
         if (parentApp.getCurrentProfile() != null) {
             modeDesc = (Profile.Mode.getDescription(parentApp.getMode()));
@@ -183,6 +194,7 @@ public class SettingsPane extends DefaultPane {
         // Add components to the SettingsPane
         add(uiSettings);
         add(syncSettings);
+        add(testPanel);
         add(applyButton);
     }
 

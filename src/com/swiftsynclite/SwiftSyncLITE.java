@@ -31,12 +31,14 @@ public class SwiftSyncLITE {
 
     private Panes myPanes = null;
     private JButton consoleButton, profilesButton, settingsButton;
+    private JPanel menu, contentPanel;
     private JSplitPane splitPane;
     private JFrame mainframe;
 
     private Controller SSFE_controller = null;
 
     private boolean isDarkMode = true;
+    private int divLoc = 150;
 
     private OperatingSystem os;
 
@@ -82,7 +84,7 @@ public class SwiftSyncLITE {
         mainframe = new JFrame("SwiftSync LITE");
         mainframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainframe.setSize(800, 600);
-        mainframe.setMinimumSize(new Dimension(660,500));
+        mainframe.setMinimumSize(new Dimension(900,500));
 
         myPanes = new Panes();
 
@@ -241,11 +243,13 @@ public class SwiftSyncLITE {
 
         welcomePane.add(textPanel, BorderLayout.CENTER);
 
-        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebarPanel, welcomePane);
-        splitPane.setEnabled(false);
-        adjustSplitPane(splitPane);
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebarPanel, welcomePane){
+        };
+        splitPane.setEnabled(true);
+        splitPane.setDividerSize(5);
 
         mainframe.add(splitPane, BorderLayout.CENTER);
+        splitPane.setContinuousLayout(true);
 
         consoleButton.addActionListener(e -> {
             sidebarItemClicked("console");
@@ -259,6 +263,7 @@ public class SwiftSyncLITE {
             sidebarItemClicked("settings");
         });
 
+        splitPane.setDividerLocation(divLoc);
         mainframe.setVisible(true);
     }
 
@@ -316,13 +321,15 @@ public class SwiftSyncLITE {
                 break;
         }
 
-        adjustSplitPane(splitPane);
+        splitPane.setDividerLocation(divLoc);
     }
 
     private void replaceContentPane(JSplitPane splitPane, JPanel newContentPane) {
         splitPane.setRightComponent(newContentPane);
         splitPane.revalidate();
         splitPane.repaint();
+        contentPanel = newContentPane;
+        newContentPane.setLayout(new BoxLayout(newContentPane,BoxLayout.Y_AXIS));
     }
 
     private void reloadBasicUI(){
@@ -337,6 +344,7 @@ public class SwiftSyncLITE {
     private void adjustSplitPane(JSplitPane splitPane){
         splitPane.setDividerLocation(200);
     }
+
     public Panes getMyPanes(){
         return myPanes;
     }
@@ -636,12 +644,19 @@ public class SwiftSyncLITE {
             fileEngine.setBufferSize(size);
         }
 
+        public void runByteTest(){
+            ByteTest testInstance = new ByteTest(this);
+        }
+
     }
 
     class Panes {
         ConsolePane consolePane;
         ProfilesPane profilesPane;
         SettingsPane settingsPane;
+
+        private static boolean wrapPanels = false;
+
          Panes(ConsolePane cp, ProfilesPane pp, SettingsPane sp){
             this.consolePane = cp;
             this.profilesPane = pp;
@@ -649,9 +664,22 @@ public class SwiftSyncLITE {
         }
 
         Panes(){
-            this.consolePane = new ConsolePane(SSFE_controller);
-            this.profilesPane = new ProfilesPane(SSFE_controller);
-            this.settingsPane = new SettingsPane(SSFE_controller);
+             if(wrapPanels){
+                 JPanel consoleWrap = new JPanel();
+                 JPanel profileWrap = new JPanel();
+                 JPanel settingsWrap = new JPanel();
+                 this.consolePane = (ConsolePane) consoleWrap;
+                 this.profilesPane = (ProfilesPane) profileWrap;
+                 this.settingsPane = (SettingsPane) settingsWrap;
+                 consoleWrap.add(new ConsolePane(SSFE_controller));
+                 profileWrap.add(new ConsolePane(SSFE_controller));
+                 settingsWrap.add(new ConsolePane(SSFE_controller));
+             }else{
+                 this.consolePane = new ConsolePane(SSFE_controller);
+                 this.profilesPane = new ProfilesPane(SSFE_controller);
+                 this.settingsPane = new SettingsPane(SSFE_controller);
+             }
+
         }
     }
 
