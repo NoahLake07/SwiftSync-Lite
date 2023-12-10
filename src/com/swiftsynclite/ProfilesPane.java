@@ -27,7 +27,6 @@ public class ProfilesPane extends DefaultPane {
         currentProfile = new JPanel();
         currentProfile.setLayout(new FlowLayout(FlowLayout.LEFT));
         currentProfile.setBorder(BorderFactory.createTitledBorder("Manage Profiles"));
-        currentProfile.setMaximumSize(new Dimension(Short.MAX_VALUE, currentProfile.getPreferredSize().height));
 
         JLabel currentProfileTitle = new JLabel("Current Profile:");
         currentProfileTitle.setHorizontalAlignment(LEFT);
@@ -58,6 +57,8 @@ public class ProfilesPane extends DefaultPane {
             saveProfile.setEnabled(false);
             saveProfile.setToolTipText("Can't save a non-existent profile");
         }
+
+        currentProfile.setMaximumSize(new Dimension(Short.MAX_VALUE, currentProfile.getPreferredSize().height));
 
         // endregion
 
@@ -182,6 +183,7 @@ public class ProfilesPane extends DefaultPane {
             currentProfileField.setText(parentApp.getCurrentProfile().getProfileName());
         }
 
+        currentProfile.setMinimumSize(currentProfile.getPreferredSize());
         add(currentProfile);
         add(directoryLocations);
     }

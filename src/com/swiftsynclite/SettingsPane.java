@@ -117,6 +117,11 @@ public class SettingsPane extends DefaultPane {
                 slider.setForeground(new Color(64, 131, 197));
             }
         });
+        if(slider.getValue()>12){
+            slider.setForeground(Color.YELLOW);
+        } else {
+            slider.setForeground(new Color(64, 131, 197));
+        }
         byteAllocationPanel.add(allocationLabel);
         byteAllocationPanel.add(slider);
 
@@ -195,7 +200,7 @@ public class SettingsPane extends DefaultPane {
         add(uiSettings);
         add(syncSettings);
         add(testPanel);
-        add(applyButton);
+        add(applyButton, LEFT_ALIGNMENT);
     }
 
     private void updateButtons(JButton def, JButton nio, JButton ss, Profile.Mode mode){
@@ -240,8 +245,10 @@ public class SettingsPane extends DefaultPane {
         }
 
         // * SYNC SETTINGS
-        parentApp.setMode(selectedMode);
-        parentApp.setBufferSize(slider.getValue()*KB);
+        if(parentApp.getCurrentProfile() != null) {
+            parentApp.setMode(selectedMode);
+            parentApp.setBufferSize(slider.getValue() * KB);
+        }
 
         // Show a confirmation message to the user.
         JOptionPane.showMessageDialog(this, "Settings applied successfully.", "Settings Applied", JOptionPane.INFORMATION_MESSAGE);

@@ -2,11 +2,16 @@ package com.swiftsynclite;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 public class ByteTest {
 
     private SwiftSyncLITE.Controller controller;
-    private JPanel testPanel;
+    private JPanel testPanel, loadingPanel;
     JFrame frame;
 
     public ByteTest(SwiftSyncLITE.Controller controller){
@@ -45,7 +50,7 @@ public class ByteTest {
         startTest.addActionListener(e->{
             homePanel.setVisible(false);
             testPanel.setVisible(true);
-            this.runTest();
+            this.loadTest();
         });
         startRow.add(startTest);
         homePanel.add(startRow);
@@ -55,10 +60,49 @@ public class ByteTest {
         frame.setVisible(true);
         frame.setResizable(false);
         frame.setLocation(400,400);
+
+        /*
+        SHRINK FRAME ANIMATION:
+        executor.execute(new Runnable() {
+        while (frame.getWidth() >= 300) {
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+                frame.repaint();
+            }
+        }
+    }
+         */
     }
 
-    private void runTest(){
-        
-    }
 
+
+    private void loadTest() {
+        loadingPanel = new JPanel();
+        loadingPanel.setLayout(new BoxLayout(loadingPanel, BoxLayout.Y_AXIS));
+        JLabel loadingLbl = new JLabel("Loading assets...");
+        loadingLbl.setFont(new Font("Arial", Font.PLAIN, 21));
+        loadingLbl.setHorizontalAlignment(SwingConstants.CENTER);
+        loadingLbl.setMinimumSize(new Dimension(frame.getWidth(), loadingLbl.getHeight()));
+        JProgressBar progress = new JProgressBar(0, 100);
+        progress.setMaximumSize(new Dimension(500, 20));
+        progress.setIndeterminate(true);
+        loadingPanel.setVisible(true);
+        frame.add(loadingPanel);
+        // Finish Loading UI
+
+        progress.putClientProperty("ProgressBar.arc", 999);
+        loadingPanel.add(progress);
+        loadingPanel.add(loadingLbl);
+        loadingPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 15, 20));
+        frame.setSize(frame.getWidth() - 10, frame.getHeight());
+
+        Function loadAll = e->{
+            // TODO load the test, then perform it
+            return null;
+        };
+
+        // TODO execute loadAll() with a multi thread executor
+    };
 }
