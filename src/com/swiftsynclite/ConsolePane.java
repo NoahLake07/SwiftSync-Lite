@@ -51,6 +51,7 @@ public class ConsolePane extends DefaultPane {
         scrollPane = new JScrollPane(console);
         scrollPane.putClientProperty("ScrollBar.thumbArc", 999 );
         scrollPane.putClientProperty("ScrollBar.thumbInsets", new Insets( 2, 2, 2, 2 ));
+        scrollPane.setPreferredSize(new Dimension(scrollPane.getPreferredSize().width,Short.MAX_VALUE));
         add(scrollPane);
 
         processPanel = new JPanel();

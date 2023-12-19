@@ -170,7 +170,24 @@ public class SwiftSyncLITE {
                 loadForIntelliJ = true;
             }
 
+            BufferedImage bufferedImage = null;
+            InputStream imageInputStream = mainframe.getClass().getResourceAsStream("res/icon.png");
+            if(imageInputStream != null){
+                bufferedImage = ImageIO.read(imageInputStream);
+                mainframe.setIconImage(bufferedImage);
+            } else {
+                loadForIntelliJ = true;
+            }
+
             if(loadForIntelliJ){
+                try {
+                    ImageIcon logoIcon = new ImageIcon(ImageIO.read(new File("res/icon.png")));
+                    Image logoImage = logoIcon.getImage();
+                    mainframe.setIconImage(logoImage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 ImageIcon logoIcon = new ImageIcon(ImageIO.read(new File("res/SSL_logo.png")));
                 Image logoImage = logoIcon.getImage();
                 int logoW = logoIcon.getIconWidth(), logoH = logoIcon.getIconHeight();
@@ -212,6 +229,7 @@ public class SwiftSyncLITE {
             }
         } catch (Exception e) {
             myPanes.consolePane.append("Error loading application resources.", ERROR_TEXT_COLOR);
+            e.printStackTrace();
         }
 
 
@@ -478,11 +496,12 @@ public class SwiftSyncLITE {
 
         void openHelpMenu() {
             String helpContent = getHelpManualContent();
+            InputStream inputStream = SwiftSyncLITE.class.getClassLoader().getResourceAsStream("docs/help.html");
 
-            try (InputStream inputStream = SwiftSyncLITE.class.getClassLoader().getResourceAsStream("docs/help.html")) {
+            if  (inputStream != null) {
                 if (inputStream != null) {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                         BufferedWriter writer = new BufferedWriter(new FileWriter("help.html"))) {
+                         BufferedWriter writer = new BufferedWriter(new FileWriter("res/help.html"))) {
 
                         String line;
                         while ((line = reader.readLine()) != null) {
@@ -492,22 +511,29 @@ public class SwiftSyncLITE {
 
                         // Write the dynamically generated help content to the file
                         writer.write(helpContent);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    // Open the generated HTML file in the default web browser
+                    try {
+                        File helpFile = new File("res/help.html");
+                        Desktop.getDesktop().open(helpFile);
+                    } catch (IOException e) {
+                        console.append("Error opening help file: " + e.getMessage(), ERROR_TEXT_COLOR);
                     }
                 } else {
                     console.append("Error reading help template: Resource not found.", ERROR_TEXT_COLOR);
                     return;
                 }
-            } catch (IOException e) {
-                console.append("Error creating help file: " + e.getMessage(), ERROR_TEXT_COLOR);
-                return;
-            }
-
-            // Open the generated HTML file in the default web browser
-            try {
-                File helpFile = new File("help.html");
-                Desktop.getDesktop().open(helpFile);
-            } catch (IOException e) {
-                console.append("Error opening help file: " + e.getMessage(), ERROR_TEXT_COLOR);
+            } else {
+                // Open the generated HTML file in the default web browser
+                try {
+                    File helpFile = new File("res/help.html");
+                    Desktop.getDesktop().open(helpFile);
+                } catch (IOException e) {
+                    console.append("Error opening help file: " + e.getMessage(), ERROR_TEXT_COLOR);
+                }
             }
         }
 
@@ -656,7 +682,6 @@ public class SwiftSyncLITE {
         SettingsPane settingsPane;
 
         private static boolean wrapPanels = false;
-
          Panes(ConsolePane cp, ProfilesPane pp, SettingsPane sp){
             this.consolePane = cp;
             this.profilesPane = pp;
