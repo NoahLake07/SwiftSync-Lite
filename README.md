@@ -65,7 +65,7 @@ View the application's user manual source HTML content [here](https://github.com
 
 *Profiles Page*
 
-// insert here
+![settings 0 5 4](https://github.com/NoahLake07/SwiftSyncLITE/assets/98616672/6e625b42-468d-4e1f-80ea-c47418f70f3e)
 
 *Settings Page*
 
