@@ -192,7 +192,7 @@ public class SwiftSyncLITE {
                 Image logoImage = logoIcon.getImage();
                 int logoW = logoIcon.getIconWidth(), logoH = logoIcon.getIconHeight();
                 double logoScaleFactor = 4.5;
-                Image resizedLogoImg = logoImage.getScaledInstance((int) ((int) logoW/logoScaleFactor), (int) ((int) logoH/logoScaleFactor),  java.awt.Image.SCALE_SMOOTH);
+                Image resizedLogoImg = logoImage.getScaledInstance((int) ((int) logoW/logoScaleFactor), (int) ((int) logoH/logoScaleFactor),  Image.SCALE_SMOOTH);
                 logoIcon = new ImageIcon(resizedLogoImg);
                 logo.setIcon(logoIcon);
                 logo.setIconTextGap(7);
@@ -204,7 +204,7 @@ public class SwiftSyncLITE {
                 Image image = consoleIcon.getImage();
                 int iconW = consoleIcon.getIconWidth(), iconH = consoleIcon.getIconHeight();
                 double scaleFactor = 3;
-                Image newimg = image.getScaledInstance((int) ((int) iconW/scaleFactor), (int) ((int) iconH/scaleFactor),  java.awt.Image.SCALE_SMOOTH);
+                Image newimg = image.getScaledInstance((int) ((int) iconW/scaleFactor), (int) ((int) iconH/scaleFactor),  Image.SCALE_SMOOTH);
                 consoleIcon = new ImageIcon(newimg);
                 consoleButton.setIcon(consoleIcon);
                 consoleButton.setIconTextGap(7);
@@ -213,7 +213,7 @@ public class SwiftSyncLITE {
                 Image image2 = profilesIcon.getImage();
                 int iconW2 = profilesIcon.getIconWidth(), iconH2 = profilesIcon.getIconHeight();
                 double scaleFactor2 = 3;
-                Image newimg2 = image2.getScaledInstance((int) ((int) iconW2/scaleFactor2), (int) ((int) iconH2/scaleFactor2),  java.awt.Image.SCALE_SMOOTH);
+                Image newimg2 = image2.getScaledInstance((int) ((int) iconW2/scaleFactor2), (int) ((int) iconH2/scaleFactor2),  Image.SCALE_SMOOTH);
                 profilesIcon = new ImageIcon(newimg2);
                 profilesButton.setIcon(profilesIcon);
                 profilesButton.setIconTextGap(7);
@@ -222,7 +222,7 @@ public class SwiftSyncLITE {
                 Image image3 = settingsIcon.getImage();
                 int iconW3 = settingsIcon.getIconWidth(), iconH3 = settingsIcon.getIconHeight();
                 double scaleFactor3 = 3;
-                Image newimg3 = image3.getScaledInstance((int) ((int) iconW3/scaleFactor3), (int) ((int) iconH3/scaleFactor3),  java.awt.Image.SCALE_SMOOTH);
+                Image newimg3 = image3.getScaledInstance((int) ((int) iconW3/scaleFactor3), (int) ((int) iconH3/scaleFactor3),  Image.SCALE_SMOOTH);
                 settingsIcon = new ImageIcon(newimg3);
                 settingsButton.setIcon(settingsIcon);
                 settingsButton.setIconTextGap(7);

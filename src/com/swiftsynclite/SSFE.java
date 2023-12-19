@@ -12,6 +12,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.swiftsynclite.SwiftSyncLITE.ERROR_TEXT_COLOR;
 
@@ -20,10 +22,11 @@ public class SSFE {
     private SwiftSyncLITE app;
     private ConsolePane console;
     private FileIndexer indexer;
-    private Boolean stopReference;
+    private static boolean stopReference;
     public static final int KB = 1024;
     private static int byteTransfer = KB*8;
     private long allTaskSizes = 0, allByteProgress = 0;
+    private ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
     public SSFE(SwiftSyncLITE app){
         this.app = app;
@@ -33,7 +36,7 @@ public class SSFE {
         this.console = cp;
     }
 
-    public void createIndexer(OperatingSystem os,File parent, File local, ConsolePane consolePane, Boolean stop){
+    public void createIndexer(OperatingSystem os,File parent, File local, ConsolePane consolePane, boolean stop){
         this.indexer = new FileIndexer(os,parent,local,consolePane);
         this.stopReference = stop;
     }
@@ -68,8 +71,6 @@ public class SSFE {
             } else if (app.getSyncMode() == Profile.Mode.NIO2) {
                 nio2sync(currentTask);
                 completedSize += taskSize; // Update completed size after each task
-                progress = (double) completedSize / totalSize;
-                console.setProgress(progress);
             } else if (app.getSyncMode() == Profile.Mode.SWIFTSYNC) {
                 swiftSync(currentTask,i+1,tasks.size());
             }
@@ -79,6 +80,7 @@ public class SSFE {
                 break;
             }
         }
+        console.setProgress(100);
     }
 
     // Calculate the total size of all tasks
@@ -104,6 +106,13 @@ public class SSFE {
             while ((bytesRead = fis.read(buffer)) != -1) {
                 fos.write(buffer, 0, bytesRead);
             }
+
+            int finalBytesRead = bytesRead;
+            cachedThreadPool.submit(()->{
+                task.setProgress((double) finalBytesRead /task.getFileSize());
+                console.setTaskProgress(task.getProgress());
+                console.setProgress(getCombinedProgress(getIndexedTasks())*100);
+            });
             fos.close();
         } catch (FileNotFoundException e) {
             console.append("ERROR: A FileNotFoundException occurred while syncing " + parentFile.getName() + " -> " + e.getMessage(), ERROR_TEXT_COLOR);
@@ -115,9 +124,17 @@ public class SSFE {
     private void nio2sync(SyncTask task){
         File childFile = new File(String.valueOf(task.getChildPath()));
         File parentFile = task.getParentFile();
+        console.setTaskLabel(task.toString());
         try {
+            task.setProgress(0.01d);
             Files.createDirectories(task.getChildPath().getParent());
             Files.copy(parentFile.toPath(), childFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            cachedThreadPool.submit(()->{
+                task.setProgress(1d);
+                console.setTaskProgress(task.progress);
+                console.setProgress(getCombinedProgress(getIndexedTasks())*100);
+            });
         } catch (FileNotFoundException fnfe){
             console.append("ERROR: A FileNotFoundException occurred while syncing " + parentFile.getName() + " -> " + fnfe.getMessage(), ERROR_TEXT_COLOR);
         } catch (IOException ioe){
@@ -158,8 +175,13 @@ public class SSFE {
                 totalBytesTransferred += bytesWritten;
                 allByteProgress += bytesWritten;
 
-                // Update progress dynamically
-                console.setTaskProgress((double) totalBytesTransferred/fileSize);
+                long finalTotalBytesTransferred = totalBytesTransferred;
+                cachedThreadPool.submit(()->{
+                    double taskProgress = (double) finalTotalBytesTransferred / (double) fileSize;
+                    console.setTaskProgress(taskProgress);
+                    task.setProgress(taskProgress);
+                    console.setProgress(getCombinedProgress(getIndexedTasks())*100);
+                });
             }
 
             // Close channels after transfer completion
@@ -247,6 +269,17 @@ public class SSFE {
         } else {
             console.append("Invalid folder path: " + filePath + "\n", ERROR_TEXT_COLOR);
         }
+    }
+
+    public double getCombinedProgress(ArrayList<SyncTask> tasks){
+        int taskQty = tasks.size();
+
+        double progSum = 0;
+        for( SyncTask task : tasks ){
+            progSum += task.getProgress();
+        }
+
+        return progSum / Double.valueOf( taskQty );
     }
 
     public class FileIndexer {
@@ -367,6 +400,8 @@ public class SSFE {
         private Path childPath;
         private String debugID = "--";
 
+        double progress;
+
         public SyncTask(File parent, Path childPath) {
             this.parent = parent;
             this.childPath = childPath;
@@ -402,11 +437,24 @@ public class SSFE {
             return parent.getPath() + "\t→\t " + childPath;
         }
 
+        double getProgress(){
+            return this.progress;
+        }
+
+        void setProgress(double d){
+            this.progress = d;
+        }
+
         public String getID(){
             return this.debugID;
         }
         public long getFileSize() {
-            return parent.length(); // Return the size of the parent file in bytes
+            try {
+                return Files.size(parent.toPath());
+            } catch (IOException e) {
+                console.append(e.getMessage()+"\n",Color.RED);
+            }
+            return -10L;
         }
     }
 

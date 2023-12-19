@@ -141,9 +141,9 @@ public class ConsolePane extends DefaultPane {
     }
 
     public void setProgress(double progress){
-        this.progressBar.setValue((int)progress*100);
+        this.progressBar.setValue((int) progress);
         this.progressBar.setStringPainted(true);
-        this.progressBar.setString((int)progress*100 + "%");
+        this.progressBar.setString((int)progress + "%");
     }
 
     public void setTaskProgress(double progress){
