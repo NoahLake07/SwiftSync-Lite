@@ -65,6 +65,10 @@ View the application's user manual source HTML content [here](https://github.com
 
 *Profiles Page*
 
+// insert here
+
+*Settings Page*
+
 ![new profile 0 5 4](https://github.com/NoahLake07/SwiftSyncLITE/assets/98616672/45974e77-4d47-4df8-8f11-04dd617174ff)
 
 *Dialog for creating a new profile*
