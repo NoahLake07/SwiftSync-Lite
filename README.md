@@ -52,19 +52,20 @@ To install SwiftSync LITE with all its core features and functionality, use the 
 View the application's user manual source HTML content [here](https://github.com/NoahLake07/SwiftSyncLITE/blob/main/docs/help.html).
 
 ## Screenshots
-// insert image here
+
+![welcome 0 5 4](https://github.com/NoahLake07/SwiftSyncLITE/assets/98616672/0ca3bce1-c7c3-4ceb-b885-b1bc0d7100c0)
 
 *Welcome Page*
 
-// insert image here
+![console 0 5 4](https://github.com/NoahLake07/SwiftSyncLITE/assets/98616672/755c2b75-efce-4408-b6ff-add4d20b01c7)
 
 *Console Page*
 
-// insert image here
+![profiles 0 5 4](https://github.com/NoahLake07/SwiftSyncLITE/assets/98616672/1114e35d-84a3-423d-a7fa-1400a7f9e993)
 
 *Profiles Page*
 
-// insert image here
+![new profile 0 5 4](https://github.com/NoahLake07/SwiftSyncLITE/assets/98616672/45974e77-4d47-4df8-8f11-04dd617174ff)
 
 *Dialog for creating a new profile*
 
