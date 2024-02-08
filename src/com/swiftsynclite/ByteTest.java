@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -61,22 +63,8 @@ public class ByteTest {
         frame.setResizable(false);
         frame.setLocation(400,400);
 
-        /*
-        SHRINK FRAME ANIMATION:
-        executor.execute(new Runnable() {
-        while (frame.getWidth() >= 300) {
-            try {
-                Thread.sleep(5);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-                frame.repaint();
-            }
-        }
-    }
-         */
-    }
 
-
+    }
 
     private void loadTest() {
         loadingPanel = new JPanel();
@@ -98,11 +86,73 @@ public class ByteTest {
         loadingPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 15, 20));
         frame.setSize(frame.getWidth() - 10, frame.getHeight());
 
-        Function loadAll = e->{
-            // TODO load the test, then perform it
+        while(frame.getWidth()>325){
+            frame.setSize(frame.getWidth()-1,frame.getHeight()-1);
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        Function<Void, Void> loadAll = e -> {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Choose location to perform the test");
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int userChoice = fileChooser.showDialog(frame, "Select");
+
+            if (userChoice == JFileChooser.APPROVE_OPTION) {
+
+                File selectedDirectory = fileChooser.getSelectedFile();
+                File mainDirectory = new File(selectedDirectory, "fileprocessingtest");
+                File localFolder = new File(mainDirectory, "local");
+                File masterFolder = new File(mainDirectory, "master");
+
+                if (!mainDirectory.exists()) {
+                    mainDirectory.mkdirs();
+                    localFolder.mkdirs();
+                    masterFolder.mkdirs();
+                }
+
+                String benchmarkFilePath = new File(mainDirectory, "benchmark_file.txt").getAbsolutePath();
+                createBenchmarkFile(benchmarkFilePath, 100);
+
+                doTest(benchmarkFilePath, localFolder, masterFolder);
+            }
             return null;
         };
 
-        // TODO execute loadAll() with a multi thread executor
-    };
+        new Thread(() -> loadAll.apply(null)).start();
+    }
+
+    private void doTest(String benchmarkFilePath, File local, File master){
+        int before = SSFE.getByteTransfer();
+         // make a loop and transfer the file with different byte transfers whilst tracking the time
+    }
+
+    private static void createBenchmarkFile(String filePath, int fileSizeMB) {
+        try {
+            File file = new File(filePath);
+            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+
+            // Set the file size
+            randomAccessFile.setLength(fileSizeMB * 1024L * 1024L);
+
+            // Fill the file with some data (optional)
+            byte[] data = "Benchmarking file content.".getBytes();
+            for (long i = 0; i < fileSizeMB * 1024L * 1024L / data.length; i++) {
+                randomAccessFile.write(data);
+            }
+
+            randomAccessFile.close();
+            System.out.println("Benchmark file created successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

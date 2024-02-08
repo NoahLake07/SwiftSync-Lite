@@ -54,7 +54,7 @@ public class SettingsPane extends DefaultPane {
         darkThemeRadioButton.setSelected(parentApp.isDarkMode());
         lightThemeRadioButton.setSelected(!parentApp.isDarkMode());
 
-        uiSettings.add(themePanel);
+        // uiSettings.add(themePanel);
 
         // * SYNC SETTINGS
         JPanel syncSettings = new JPanel();

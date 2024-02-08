@@ -1,6 +1,8 @@
 package com.swiftsynclite;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 
 import javax.imageio.ImageIO;
 import javax.sound.midi.Sequencer;
@@ -70,7 +72,7 @@ public class SwiftSyncLITE {
         }
 
         try {
-            UIManager.setLookAndFeel(new FlatDarculaLaf());
+            UIManager.setLookAndFeel(new FlatMacDarkLaf());
         } catch (UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
