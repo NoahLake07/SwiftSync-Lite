@@ -26,7 +26,7 @@ public class SettingsPane extends DefaultPane {
     private String modeDesc = "";
     private Profile.Mode selectedMode = Profile.Mode.DEFAULT;
     private JLabel modeDescLabel;
-    private JPanel modeDescPanel;
+    private JPanel modeDescPanel, syncSettings, byteAllocationPanel;
     private JSlider slider;
 
     SettingsPane(SwiftSyncLITE.Controller parentApp) {
@@ -57,7 +57,7 @@ public class SettingsPane extends DefaultPane {
         // uiSettings.add(themePanel);
 
         // * SYNC SETTINGS
-        JPanel syncSettings = new JPanel();
+        syncSettings = new JPanel();
         syncSettings.setLayout(new BoxLayout(syncSettings, BoxLayout.Y_AXIS));
         syncSettings.setBorder(BorderFactory.createTitledBorder("Sync Settings"));
 
@@ -100,11 +100,11 @@ public class SettingsPane extends DefaultPane {
         modeDescLabel.setBackground(Color.BLACK);
 
         // SYNC SETTINGS > BYTE ALLOCATION SIZE
-        JPanel byteAllocationPanel = new JPanel();
+        byteAllocationPanel = new JPanel();
         byteAllocationPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         byteAllocationPanel.setBorder(BorderFactory.createEmptyBorder(10,0,0,0));
         JLabel allocationLabel = new JLabel("Transfer Buffer Allocation (KB):");
-        slider = new JSlider(JSlider.HORIZONTAL, 0, 15, 8);
+        slider = new JSlider(JSlider.HORIZONTAL, 1, 20, 8);
         slider.setMinorTickSpacing(1);
         slider.setMajorTickSpacing(5);
         slider.setPaintLabels(true);
@@ -117,7 +117,7 @@ public class SettingsPane extends DefaultPane {
                 slider.setForeground(new Color(64, 131, 197));
             }
         });
-        if(slider.getValue()>12){
+        if(slider.getValue()>14){
             slider.setForeground(Color.YELLOW);
         } else {
             slider.setForeground(new Color(64, 131, 197));
@@ -197,7 +197,7 @@ public class SettingsPane extends DefaultPane {
         });
 
         // Add components to the SettingsPane
-        add(uiSettings);
+        add(uiSettings); //todo make the ui settings
         add(syncSettings);
         add(testPanel);
         add(applyButton, LEFT_ALIGNMENT);
@@ -227,23 +227,11 @@ public class SettingsPane extends DefaultPane {
         modeDescLabel.setText(modeDesc);
     }
 
-    private void applySettings() {
-        // * THEME
-        boolean isDarkMode = darkThemeRadioButton.isSelected();
-        this.theme = (isDarkMode?0:1);
-        try {
-            if (isDarkMode) {
-                UIManager.setLookAndFeel(new FlatDarkLaf());
-            } else {
-                UIManager.setLookAndFeel(new FlatLightLaf());
-            }
-            // Update the UI components to reflect the new theme
-            SwingUtilities.updateComponentTreeUI(parentApp.getFrame());
-            parentApp.reloadBasicUI();
-        } catch (UnsupportedLookAndFeelException e) {
-            e.printStackTrace(); // Handle the exception according to your needs
-        }
+    public void refreshBuffer(){
+        slider.setValue(parentApp.getByteBuffer());
+    }
 
+    private void applySettings() {
         // * SYNC SETTINGS
         if(parentApp.getCurrentProfile() != null) {
             parentApp.setMode(selectedMode);

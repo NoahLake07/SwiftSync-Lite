@@ -1,20 +1,33 @@
 package com.swiftsynclite;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 
+import static javax.swing.JOptionPane.showMessageDialog;
+
 public class ByteTest {
 
     private SwiftSyncLITE.Controller controller;
-    private JPanel testPanel, loadingPanel;
+    private JPanel testPanel, loadingPanel, resultsPanel;
     JFrame frame;
+    JProgressBar progress;
+    JLabel loadingLbl;
 
     public ByteTest(SwiftSyncLITE.Controller controller){
         this.controller = controller;
@@ -62,18 +75,17 @@ public class ByteTest {
         frame.setVisible(true);
         frame.setResizable(false);
         frame.setLocation(400,400);
-
-
     }
 
     private void loadTest() {
         loadingPanel = new JPanel();
         loadingPanel.setLayout(new BoxLayout(loadingPanel, BoxLayout.Y_AXIS));
-        JLabel loadingLbl = new JLabel("Loading assets...");
+        loadingLbl = new JLabel("Loading assets...");
         loadingLbl.setFont(new Font("Arial", Font.PLAIN, 21));
+        loadingLbl.setBorder(BorderFactory.createEmptyBorder(10,0,10,0));
         loadingLbl.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLbl.setMinimumSize(new Dimension(frame.getWidth(), loadingLbl.getHeight()));
-        JProgressBar progress = new JProgressBar(0, 100);
+        progress = new JProgressBar(0, 100);
         progress.setMaximumSize(new Dimension(500, 20));
         progress.setIndeterminate(true);
         loadingPanel.setVisible(true);
@@ -89,24 +101,21 @@ public class ByteTest {
         while(frame.getWidth()>325){
             frame.setSize(frame.getWidth()-1,frame.getHeight()-1);
             try {
-                Thread.sleep(1);
+                Thread.sleep(0);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
 
-        Function<Void, Void> loadAll = e -> {
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
+        Runnable loadAll = () -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Choose location to perform the test");
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int userChoice = fileChooser.showDialog(frame, "Select");
 
             if (userChoice == JFileChooser.APPROVE_OPTION) {
+
+                loadingLbl.setText("Creating resources...");
 
                 File selectedDirectory = fileChooser.getSelectedFile();
                 File mainDirectory = new File(selectedDirectory, "fileprocessingtest");
@@ -122,21 +131,150 @@ public class ByteTest {
                 String benchmarkFilePath = new File(mainDirectory, "benchmark_file.txt").getAbsolutePath();
                 createBenchmarkFile(benchmarkFilePath, 100);
 
-                doTest(benchmarkFilePath, localFolder, masterFolder);
-            }
-            return null;
-        };
+                HashMap<Integer,Long> results = doBenchmark(benchmarkFilePath, localFolder,3);
+                int fastestTest = -1; long fastestTestTime = Long.MAX_VALUE;
+                for (int i = 0; i < results.size(); i++) {
+                    if(results.get(i+1)<fastestTestTime){
+                        fastestTest = i+1; fastestTestTime = results.get(i+1);
+                    }
+                }
 
-        new Thread(() -> loadAll.apply(null)).start();
+                loadingPanel.setVisible(false);
+                resultsPanel = new JPanel();
+
+                Object[][] data = new Object[results.size()][3];
+                Object[] columnNames = new Object[]{"Test Number","Byte Transfer (KB)","Time (ms)"};
+                for (int i = 0; i < results.size(); i++) {
+                    data[i][0] = (i+1);
+                    data[i][1] = i+1;
+                    data[i][2] = results.get(i+1);
+                }
+
+                DefaultTableModel tableModel = new DefaultTableModel() {
+                    @Override
+                    public boolean isCellEditable(int row, int column) {
+                        return false;
+                    }
+                };
+
+                JTable resultTable = new JTable(data,columnNames);
+                //resultTable.setModel(tableModel);
+
+                JLabel bestByteAllocation = new JLabel();
+                bestByteAllocation.setText("Optimal Byte Allocation Setting: " + fastestTest);
+                bestByteAllocation.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+
+                JPanel applyPanel = new JPanel();
+                applyPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+                    JButton apply = new JButton("Apply");
+                int finalFastestTest = fastestTest;
+                apply.addActionListener(e->{
+                        controller.setBufferSize(finalFastestTest);
+                        showMessageDialog(null,"Settings applied successfully.");
+                    });
+                applyPanel.add(apply);
+
+                resultsPanel.setLayout(new BoxLayout(resultsPanel,BoxLayout.Y_AXIS));
+                resultsPanel.add(resultTable);
+                resultsPanel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+
+                resultsPanel.add(bestByteAllocation);
+                resultsPanel.add(applyPanel);
+
+                JScrollPane scrollPane = new JScrollPane(resultsPanel);
+
+                frame.add(scrollPane);
+                frame.setSize(300,500);
+                frame.setTitle("Benchmark Results");
+                frame.repaint();
+                frame.setResizable(true);
+            }
+        };
+        Executors.newCachedThreadPool().submit(loadAll);
     }
 
-    private void doTest(String benchmarkFilePath, File local, File master){
+    private HashMap<Integer,Long> doBenchmark(String benchmarkFilePath, File local, int testQty){
+
+        ArrayList<HashMap<Integer,Long>> results = new ArrayList<>();
+        int numOfTests = 18;
+
+        for (int i = 0; i < testQty; i++) {
+            loadingLbl.setText("Running benchmark...");
+            progress.setValue((int) ((double) i+1 / (double) testQty)*100);
+            progress.setString("Running test "+ (i+1) + " out of " + testQty);
+            File testLocal = new File(local.getPath() + "/Test " + i+1 + "/");
+            testLocal.mkdir();
+
+            results.add(doTest(benchmarkFilePath,testLocal,numOfTests));
+        }
+
+        loadingLbl.setText("Compiling results...");
+
+        return averageOfHashMaps(results);
+    }
+
+    private HashMap<Integer,Long> doTest(String benchmarkFilePath, File local, int numOfTests){
+        progress.setIndeterminate(false);
+        progress.setString("Initializing...");
         int before = SSFE.getByteTransfer();
-         // make a loop and transfer the file with different byte transfers whilst tracking the time
+        SSFE fileEngine = new SSFE(null);
+        File benchmarkFile = new File(benchmarkFilePath);
+
+        HashMap<Integer,Long> results = new HashMap<>();
+
+        for (int i = 0; i < numOfTests; i++) {
+            System.out.println("> Testing buffer size of " + (i+1)*SSFE.KB);
+            fileEngine.setBufferSize((i+1)*SSFE.KB);
+
+            SSFE.SyncTask task = fileEngine.instantiateTask(benchmarkFile, Path.of(local.getPath() + "/benchmarkfile " + i + "/"));
+            LocalDateTime timeStart = LocalDateTime.now();
+            fileEngine.sync(task, Profile.Mode.DEFAULT);
+            LocalDateTime timeEnd = LocalDateTime.now();
+
+            long ms = ChronoUnit.MILLIS.between(timeStart,timeEnd);
+            results.put(i+1,ms);
+        }
+
+        print(results);
+
+        return results;
+    }
+
+    private static void print(HashMap<Integer,Long> hashMap){
+        for (Integer key : hashMap.keySet()) {
+            System.out.println(key + " = " + hashMap.get(key));
+        }
+    }
+
+    public static HashMap<Integer, Long> averageOfHashMaps(ArrayList<HashMap<Integer, Long>> arrayList) {
+        HashMap<Integer, Long> averages = new HashMap<>();
+
+        for (HashMap<Integer, Long> hashMap : arrayList) {
+            for (Integer key : hashMap.keySet()) {
+                Long value = hashMap.get(key);
+
+                if (!averages.containsKey(key)) {
+                    averages.put(key, 0L);
+                }
+
+                averages.put(key, averages.get(key) + value);
+            }
+        }
+
+        for (Integer key : averages.keySet()) {
+            averages.put(key, averages.get(key) / arrayList.size());
+        }
+
+        return averages;
     }
 
     private static void createBenchmarkFile(String filePath, int fileSizeMB) {
         try {
+            Path path = Path.of(filePath);
+            if(Files.exists(path)){
+                Files.delete(path);
+            }
+
             File file = new File(filePath);
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
 
@@ -144,7 +282,7 @@ public class ByteTest {
             randomAccessFile.setLength(fileSizeMB * 1024L * 1024L);
 
             // Fill the file with some data (optional)
-            byte[] data = "Benchmarking file content.".getBytes();
+            byte[] data = "﷽ SSL BENCHMARK CONTENT ﷽ |".getBytes();
             for (long i = 0; i < fileSizeMB * 1024L * 1024L / data.length; i++) {
                 randomAccessFile.write(data);
             }

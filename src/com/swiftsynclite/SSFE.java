@@ -53,6 +53,16 @@ public class SSFE {
         return this.indexer.index();
     }
 
+    public void sync(SyncTask task, Profile.Mode syncMode){
+            if (syncMode == Profile.Mode.DEFAULT) {
+                defaultSync(task);
+            } else if (syncMode == Profile.Mode.NIO2) {
+                nio2sync(task);
+            } else if (syncMode == Profile.Mode.SWIFTSYNC) {
+                swiftSync(task,1,1);
+            }
+    }
+
     public void sync(ArrayList<SyncTask> tasks, Boolean stopReference) {
         long totalSize = calculateTotalSize(tasks); // Calculate total size of all tasks
         long completedSize = 0; // Variable to keep track of completed size
@@ -241,6 +251,10 @@ public class SSFE {
         byteTransfer = size;
     }
 
+    public int getBufferSize(){
+        return byteTransfer;
+    }
+
     /**
      * Returns the byte size of all files and subfiles inside a given directory through recursion of this method.
      * @param directory the starting directory to sum byte sizes
@@ -392,6 +406,10 @@ public class SSFE {
         public void setFileOverwriteEnabled(boolean status){
             this.fileOverwriteEnabled = status;
         }
+    }
+
+    public SyncTask instantiateTask(File parent, Path childPath){
+        return new SyncTask(parent,childPath);
     }
 
     public class SyncTask {

@@ -1,11 +1,8 @@
 package com.swiftsynclite;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 
 import javax.imageio.ImageIO;
-import javax.sound.midi.Sequencer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -247,6 +244,7 @@ public class SwiftSyncLITE {
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
         textPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        textPanel.setAlignmentY(Component.CENTER_ALIGNMENT);
 
         JLabel welcomeText = new JLabel("Welcome to SwiftSync LITE!");
         welcomeText.setHorizontalAlignment(SwingConstants.CENTER);
@@ -377,6 +375,10 @@ public class SwiftSyncLITE {
         SSFE_controller.setMode(mode);
     }
 
+    public void refreshSettingsPane(){
+        myPanes.settingsPane.refreshBuffer();
+    }
+
     public OperatingSystem getOS(){
         return this.os;
     }
@@ -422,6 +424,10 @@ public class SwiftSyncLITE {
 
         public OperatingSystem getOS(){
             return ui.os;
+        }
+
+        public int getByteBuffer(){
+            return fileEngine.getBufferSize();
         }
 
         protected void analyze(String s){
@@ -670,6 +676,7 @@ public class SwiftSyncLITE {
 
         public void setBufferSize(int size){
             fileEngine.setBufferSize(size);
+            ui.refreshSettingsPane();
         }
 
         public void runByteTest(){
