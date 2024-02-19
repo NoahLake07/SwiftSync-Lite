@@ -1,7 +1,11 @@
 package com.swiftsynclite;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.formdev.flatlaf.ui.FlatArrowButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,6 +32,7 @@ public class SettingsPane extends DefaultPane {
     private JLabel modeDescLabel;
     private JPanel modeDescPanel, syncSettings, byteAllocationPanel;
     private JSlider slider;
+    private Runnable applyThemeSettings;
 
     SettingsPane(SwiftSyncLITE.Controller parentApp) {
         super("System Settings");
@@ -41,20 +46,61 @@ public class SettingsPane extends DefaultPane {
         uiSettings.setMaximumSize(new Dimension(Short.MAX_VALUE,30));
 
         // UI SETTINGS > THEME
-        JPanel themePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JLabel themeLabel = new JLabel("Theme:");
-        ButtonGroup themeGroup = new ButtonGroup();
-        lightThemeRadioButton = new JRadioButton("Light");
-        darkThemeRadioButton = new JRadioButton("Dark");
-        themeGroup.add(lightThemeRadioButton);
-        themeGroup.add(darkThemeRadioButton);
-        themePanel.add(themeLabel);
-        themePanel.add(lightThemeRadioButton);
-        themePanel.add(darkThemeRadioButton);
-        darkThemeRadioButton.setSelected(parentApp.isDarkMode());
-        lightThemeRadioButton.setSelected(!parentApp.isDarkMode());
+        JPanel themePanel = new JPanel();
+        themePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-        // uiSettings.add(themePanel);
+        JLabel themeLabel = new JLabel("App Theme");
+        themeLabel.setBorder(BorderFactory.createEmptyBorder(0,0,0,15));
+
+        ButtonGroup buttonGroup = new ButtonGroup();
+        JRadioButton macDark = new JRadioButton("Mac Dark");
+        JRadioButton flatDark = new JRadioButton("Flat Dark");
+        JRadioButton intellijDark = new JRadioButton("IntelliJ Dark");
+        JRadioButton darcula = new JRadioButton("Darcula");
+
+        LookAndFeel currentLaf = UIManager.getLookAndFeel();
+        macDark.setSelected(currentLaf instanceof FlatMacDarkLaf);
+        flatDark.setSelected(currentLaf instanceof FlatDarkLaf);
+        intellijDark.setSelected(currentLaf instanceof FlatIntelliJLaf);
+        darcula.setSelected(currentLaf instanceof FlatDarculaLaf);
+
+        buttonGroup.add(macDark);
+        buttonGroup.add(flatDark);
+        buttonGroup.add(intellijDark);
+        buttonGroup.add(darcula);
+
+        themePanel.add(themeLabel);
+        themePanel.add(macDark);
+        themePanel.add(flatDark);
+        themePanel.add(intellijDark);
+        themePanel.add(darcula);
+
+        uiSettings.add(themePanel);
+
+        applyThemeSettings = new Runnable() {
+            @Override
+            public void run() {
+                LookAndFeel laf;
+                if(macDark.isSelected()){
+                    laf = new FlatMacDarkLaf();
+                } else if (flatDark.isSelected()){
+                    laf = new FlatDarkLaf();
+                } else if (intellijDark.isSelected()){
+                    laf = new FlatIntelliJLaf();
+                } else if (darcula.isSelected()){
+                    laf = new FlatDarculaLaf();
+                } else {
+                    return;
+                }
+
+                try {
+                    UIManager.setLookAndFeel(laf);
+                    parentApp.repaintAll();
+                } catch (UnsupportedLookAndFeelException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
 
         // * SYNC SETTINGS
         syncSettings = new JPanel();
@@ -237,6 +283,9 @@ public class SettingsPane extends DefaultPane {
             parentApp.setMode(selectedMode);
             parentApp.setBufferSize(slider.getValue() * KB);
         }
+
+        // * UI SETTINGS
+        applyThemeSettings.run();
 
         // Show a confirmation message to the user.
         JOptionPane.showMessageDialog(this, "Settings applied successfully.", "Settings Applied", JOptionPane.INFORMATION_MESSAGE);

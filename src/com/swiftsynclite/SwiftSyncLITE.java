@@ -383,6 +383,9 @@ public class SwiftSyncLITE {
         return this.os;
     }
 
+    public void updateUI(){
+    }
+
     class Controller {
 
         private Profile currentProfile;
@@ -428,6 +431,10 @@ public class SwiftSyncLITE {
 
         public int getByteBuffer(){
             return fileEngine.getBufferSize();
+        }
+
+        public void repaintAll(){
+            ui.getMyPanes().repaint();
         }
 
         protected void analyze(String s){
@@ -697,23 +704,40 @@ public class SwiftSyncLITE {
             this.settingsPane = sp;
         }
 
-        Panes(){
-             if(wrapPanels){
-                 JPanel consoleWrap = new JPanel();
-                 JPanel profileWrap = new JPanel();
-                 JPanel settingsWrap = new JPanel();
-                 this.consolePane = (ConsolePane) consoleWrap;
-                 this.profilesPane = (ProfilesPane) profileWrap;
-                 this.settingsPane = (SettingsPane) settingsWrap;
-                 consoleWrap.add(new ConsolePane(SSFE_controller));
-                 profileWrap.add(new ConsolePane(SSFE_controller));
-                 settingsWrap.add(new ConsolePane(SSFE_controller));
-             }else{
-                 this.consolePane = new ConsolePane(SSFE_controller);
-                 this.profilesPane = new ProfilesPane(SSFE_controller);
-                 this.settingsPane = new SettingsPane(SSFE_controller);
-             }
+        Panes() {
+            if (wrapPanels) {
+                JPanel consoleWrap = new JPanel();
+                JPanel profileWrap = new JPanel();
+                JPanel settingsWrap = new JPanel();
+                this.consolePane = (ConsolePane) consoleWrap;
+                this.profilesPane = (ProfilesPane) profileWrap;
+                this.settingsPane = (SettingsPane) settingsWrap;
+                consoleWrap.add(new ConsolePane(SSFE_controller));
+                profileWrap.add(new ConsolePane(SSFE_controller));
+                settingsWrap.add(new ConsolePane(SSFE_controller));
+            } else {
+                this.consolePane = new ConsolePane(SSFE_controller);
+                this.profilesPane = new ProfilesPane(SSFE_controller);
+                this.settingsPane = new SettingsPane(SSFE_controller);
+            }
 
+        }
+
+        public void repaint(){
+             Component[] c1 = consolePane.getComponents();
+             Component[] c2 = profilesPane.getComponents();
+             Component[] c3 = settingsPane.getComponents();
+             Component[] c4 = splitPane.getComponents();
+             Component[] c5 = settingsPane.getParent().getComponents();
+             repaint(c1,c2,c3,c4,c5);
+        }
+
+        void repaint(Component[]... components){
+            for (int i = 0; i < components.length; i++) {
+                for (int j = 0; j < components[i].length; j++) {
+                    SwingUtilities.updateComponentTreeUI(components[i][j]);
+                }
+            }
         }
     }
 

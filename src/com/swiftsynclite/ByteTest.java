@@ -45,16 +45,18 @@ public class ByteTest {
         headerText.setHorizontalAlignment(SwingConstants.CENTER);
         homePanel.add(headerText);
 
-        JLabel testDetailsHeader = new JLabel("This test will determine the best byte allocation for your device.\nIt will:");
-        testDetailsHeader.setBorder(BorderFactory.createEmptyBorder(0,0,10,0));
+        JLabel testDetailsHeader = new JLabel("This test will determine the best byte allocation for your device.");
         testDetailsHeader.setFont(new Font("Arial",Font.PLAIN,14));
+
         JTextPane testDetails = new JTextPane();
-        testDetails.setText("  - Run 10 transfers on your computer while collecting data\n" +
-                "  - Analyze the data and determine which is most efficient for your device\n" +
+        testDetails.setText("It will:\n" +
+                "  - Run 30+ transfers on your computer while collecting data\n" +
+                "  - Analyze the data and determine what byte allocation is most efficient for your device\n" +
                 "  - Display results and an option to apply the found setting\n\n" +
-                "Estimated time is 5 minutes. Could vary depending on your device.");
+                "Estimated time: <2 min.");
         testDetails.setPreferredSize(new Dimension(Short.MAX_VALUE,50));
         testDetails.setEditable(false);
+        testDetails.setBorder(BorderFactory.createEmptyBorder(10,0,0,0));
         homePanel.add(testDetailsHeader);
         homePanel.add(testDetails);
 
@@ -67,7 +69,9 @@ public class ByteTest {
             testPanel.setVisible(true);
             this.loadTest();
         });
+        startTest.setMaximumSize(new Dimension(Short.MAX_VALUE,25));
         startRow.add(startTest);
+        homePanel.setBorder(BorderFactory.createEmptyBorder(0,20,15,20));
         homePanel.add(startRow);
 
         frame.add(homePanel);
@@ -126,12 +130,22 @@ public class ByteTest {
                     mainDirectory.mkdirs();
                     localFolder.mkdirs();
                     masterFolder.mkdirs();
+                } else {
+                    mainDirectory.delete();
+                    localFolder.delete();
+                    masterFolder.delete();
+                    mainDirectory.mkdirs();
+                    localFolder.mkdirs();
+                    masterFolder.mkdirs();
                 }
 
-                String benchmarkFilePath = new File(mainDirectory, "benchmark_file.txt").getAbsolutePath();
+                File benchmarkFile = new File(mainDirectory, "benchmark_file.txt");
+                String benchmarkFilePath = benchmarkFile.getAbsolutePath();
                 createBenchmarkFile(benchmarkFilePath, 100);
 
-                HashMap<Integer,Long> results = doBenchmark(benchmarkFilePath, localFolder,3);
+                progress.setStringPainted(true);
+                HashMap<Integer,Long> results = doBenchmark(benchmarkFilePath, localFolder,5);
+
                 int fastestTest = -1; long fastestTestTime = Long.MAX_VALUE;
                 for (int i = 0; i < results.size(); i++) {
                     if(results.get(i+1)<fastestTestTime){
@@ -188,6 +202,12 @@ public class ByteTest {
                 frame.setTitle("Benchmark Results");
                 frame.repaint();
                 frame.setResizable(true);
+
+                try {
+                    Files.delete(mainDirectory.toPath());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         };
         Executors.newCachedThreadPool().submit(loadAll);
@@ -200,7 +220,7 @@ public class ByteTest {
 
         for (int i = 0; i < testQty; i++) {
             loadingLbl.setText("Running benchmark...");
-            progress.setValue((int) ((double) i+1 / (double) testQty)*100);
+            progress.setValue((int) (((i + 1.0) / (double) testQty) * 100));
             progress.setString("Running test "+ (i+1) + " out of " + testQty);
             File testLocal = new File(local.getPath() + "/Test " + i+1 + "/");
             testLocal.mkdir();
@@ -209,6 +229,7 @@ public class ByteTest {
         }
 
         loadingLbl.setText("Compiling results...");
+        progress.setStringPainted(false);
 
         return averageOfHashMaps(results);
     }
