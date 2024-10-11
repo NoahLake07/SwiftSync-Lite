@@ -14,7 +14,7 @@ import static java.awt.Font.BOLD;
 
 public class SwiftSyncLITE {
 
-    public static final String VERSION = "0.5 beta";
+    public static final String VERSION = "1.0.0";
 
     public static final Font SELECTED_FONT = new Font("Arial", BOLD,15);
     public static final Font DEFAULT_BTN_FONT = new Font("Arial",Font.PLAIN,15);
