@@ -22,9 +22,9 @@ This app utilizes Java for cross-platform functionality. You can download a JRE 
 To install SwiftSync LITE with all its core features and functionality, use the dedicated application installer.
 | Platform | Version | Release Date | Download |
 | -------- | ------- | ------------ | -------- |
-| Windows | 1.0.0 | 10/11/2024 | [Download]() |
+| Windows | 1.0.0 | 10/11/2024 | [Download](https://github.com/NoahLake07/SwiftSync-Lite/blob/main/out/artifacts/SwiftSync_Lite_v1_0_0_jar/SSL_Installer%20v1.0.0.jar) |
 | Windows | 0.5.3 | 11/5/2023 | [Download](https://github.com/NoahLake07/SwiftSyncLITE/blob/main/versions/v0.5.3/SSL_Installer%20v0.5.3.jar)
-| Mac OS | 1.0.0 | Coming Soon | |
+| Mac OS | 1.0.0 | Coming Soon | -- |
 
 ## Basic Usage
 
